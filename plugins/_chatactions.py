@@ -229,6 +229,8 @@ async def uname_change(e):
 async def uname_stuff(id, uname, name):
     if udB.get_key("USERNAME_LOG"):
         old_ = udB.get_key("USERNAME_DB") or {}
+        if not isinstance(old_, dict):
+            old_ = {}
         old = old_.get(id)
         # Ignore Name Logs
         if old and old == uname:
