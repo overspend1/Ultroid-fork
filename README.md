@@ -23,7 +23,6 @@
 ----
 
 # Deploy
-- [Heroku](#deploy-to-heroku)
 - [Okteto](#deploy-to-okteto)
 - [Local Machine](#deploy-locally)
 
@@ -36,16 +35,6 @@
 - Tutorial to get Redis URL and password - [here.](./resources/extras/redistut.md)
 ---
 
-## Deploy to Heroku
-Get the [Necessary Variables](#Necessary-Variables) and then click the button below!  
-
-<summary>Deploy To Heroku</summary>
-<p>
-<br>
-<a href="https://heroku.com/deploy">
-  <img src="https://www.herokucdn.com/deploy/button.svg" alt="Deploy">
-</a>
-</p>
 ## Deploy to Okteto
 Get the [Necessary Variables](#Necessary-Variables) and then click the button below!
 
