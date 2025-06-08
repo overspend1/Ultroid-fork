@@ -52,6 +52,7 @@
 • `{i}pixelator <reply image>`
     Create a Pixelated Image..
 """
+
 import os
 
 from . import LOGS, con

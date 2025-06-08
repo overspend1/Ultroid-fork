@@ -90,6 +90,7 @@ async def autoupdate_local_database():
 def update_envs():
     """Update Var. attributes to udB"""
     from .. import udB
+
     _envs = [*list(os.environ)]
     if ".env" in os.listdir("."):
         [_envs.append(_) for _ in list(RepositoryEnv(config._find_file(".")).data)]
@@ -411,7 +412,7 @@ async def plug(plugin_channels):
             f.write("from plugins import *\n\nbot = ultroid_bot")
     LOGS.info("• Loading Plugins from Plugin Channel(s) •")
     for chat in plugin_channels:
-        LOGS.info(f"{'•'*4} {chat}")
+        LOGS.info(f"{'•' * 4} {chat}")
         try:
             async for x in ultroid_bot.iter_messages(
                 chat, search=".py", filter=InputMessagesFilterDocument, wait_time=10
@@ -430,7 +431,6 @@ async def plug(plugin_channels):
                         os.remove(plugin)
         except Exception as er:
             LOGS.exception(er)
-
 
 
 async def ready():

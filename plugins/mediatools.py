@@ -14,6 +14,7 @@
    Rotate any video/photo/media..
    Note : for video it should be angle of 90's
 """
+
 import os
 import time
 from datetime import datetime as dt

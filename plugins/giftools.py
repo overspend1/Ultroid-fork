@@ -23,6 +23,7 @@
 •`{i}gif <query>`
    Send video regarding to query.
 """
+
 import os
 import random
 import time

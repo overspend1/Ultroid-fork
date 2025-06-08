@@ -137,7 +137,7 @@ async def pass_on(ult):
             if not theme and spli[1] in RaySoTheme:
                 theme = spli[1]
         except Exception as sam:
-            LOGS.exception(sam)    
+            LOGS.exception(sam)
     if not text:
         await proc.eor("No text to beautify!")
         return

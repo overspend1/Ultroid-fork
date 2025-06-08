@@ -345,12 +345,12 @@ def page_num(index, key):
             [
                 Button.inline(
                     "« Pʀᴇᴠɪᴏᴜs",
-                    data=f"uh_{key}_{index-1}",
+                    data=f"uh_{key}_{index - 1}",
                 ),
                 Button.inline("« Bᴀᴄᴋ »", data="open"),
                 Button.inline(
                     "Nᴇxᴛ »",
-                    data=f"uh_{key}_{index+1}",
+                    data=f"uh_{key}_{index + 1}",
                 ),
             ]
         )

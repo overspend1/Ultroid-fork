@@ -37,14 +37,14 @@ ENDPOINTS = {
     "gpt": "https://api.openai.com/v1/chat/completions",
     "antr": "https://api.anthropic.com/v1/messages",
     "gemini": "https://generativelanguage.googleapis.com/v1beta/chat/completions",
-    "deepseek": "https://api.deepseek.com/chat/completions"
+    "deepseek": "https://api.deepseek.com/chat/completions",
 }
 
 DEFAULT_MODELS = {
     "gpt": "gpt-4o-mini",
     "antr": "claude-3-opus-20240229",
     "gemini": "gemini-1.5-flash",
-    "deepseek": "deepseek-chat"
+    "deepseek": "deepseek-chat",
 }
 
 
@@ -54,7 +54,7 @@ def get_model(provider):
         "gpt": "OPENAI_MODEL",
         "antr": "ANTHROPIC_MODEL",
         "gemini": "GEMINI_MODEL",
-        "deepseek": "DEEPSEEK_MODEL"
+        "deepseek": "DEEPSEEK_MODEL",
     }
     return udB.get_key(model_keys[provider]) or DEFAULT_MODELS[provider]
 
@@ -66,7 +66,7 @@ async def stream_response(msg, text):
     words = text.split()
     chunks = []
     current_chunk = []
-    
+
     for word in words:
         current_chunk.append(word)
         if len(" ".join(current_chunk)) > 100:
@@ -74,7 +74,7 @@ async def stream_response(msg, text):
             current_chunk = [word]
     if current_chunk:
         chunks.append(" ".join(current_chunk))
-    
+
     for chunk in chunks:
         current += chunk + " "
         try:
@@ -90,13 +90,13 @@ async def get_ai_response(provider, prompt, api_key, stream=False):
     try:
         headers = {"Content-Type": "application/json"}
         model = get_model(provider)
-        
+
         if provider == "gpt":
             headers["Authorization"] = f"Bearer {api_key}"
             data = {
                 "model": model,
                 "messages": [{"role": "user", "content": prompt}],
-                "stream": stream
+                "stream": stream,
             }
             if not stream:
                 response = await async_searcher(
@@ -104,23 +104,27 @@ async def get_ai_response(provider, prompt, api_key, stream=False):
                     headers=headers,
                     post=True,
                     json=data,
-                    re_json=True
+                    re_json=True,
                 )
                 yield response["choices"][0]["message"]["content"]
                 return
-                
+
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    ENDPOINTS[provider],
-                    headers=headers,
-                    json=data
+                    ENDPOINTS[provider], headers=headers, json=data
                 ) as resp:
                     async for line in resp.content:
                         if line:
                             try:
-                                json_line = json.loads(line.decode('utf-8').strip().strip('data:').strip())
-                                if 'choices' in json_line and json_line['choices']:
-                                    content = json_line['choices'][0].get('delta', {}).get('content', '')
+                                json_line = json.loads(
+                                    line.decode("utf-8").strip().strip("data:").strip()
+                                )
+                                if "choices" in json_line and json_line["choices"]:
+                                    content = (
+                                        json_line["choices"][0]
+                                        .get("delta", {})
+                                        .get("content", "")
+                                    )
                                     if content:
                                         yield content
                             except Exception:
@@ -132,7 +136,7 @@ async def get_ai_response(provider, prompt, api_key, stream=False):
             data = {
                 "model": model,
                 "messages": [{"role": "user", "content": prompt}],
-                "stream": stream
+                "stream": stream,
             }
             if not stream:
                 response = await async_searcher(
@@ -140,23 +144,21 @@ async def get_ai_response(provider, prompt, api_key, stream=False):
                     headers=headers,
                     post=True,
                     json=data,
-                    re_json=True
+                    re_json=True,
                 )
                 yield response["content"][0]["text"]
                 return
-                
+
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    ENDPOINTS[provider],
-                    headers=headers,
-                    json=data
+                    ENDPOINTS[provider], headers=headers, json=data
                 ) as resp:
                     async for line in resp.content:
                         if line:
                             try:
-                                json_line = json.loads(line.decode('utf-8').strip())
-                                if 'content' in json_line:
-                                    content = json_line['content'][0]['text']
+                                json_line = json.loads(line.decode("utf-8").strip())
+                                if "content" in json_line:
+                                    content = json_line["content"][0]["text"]
                                     if content:
                                         yield content
                             except Exception:
@@ -168,11 +170,11 @@ async def get_ai_response(provider, prompt, api_key, stream=False):
                 "model": model,
                 "messages": [
                     {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": prompt},
                 ],
-                "stream": stream
+                "stream": stream,
             }
-            
+
             if not stream:
                 try:
                     response = await async_searcher(
@@ -180,15 +182,20 @@ async def get_ai_response(provider, prompt, api_key, stream=False):
                         headers=headers,
                         post=True,
                         json=data,
-                        re_json=True
+                        re_json=True,
                     )
                     if "error" in response:
                         error = response["error"]
                         if error.get("code") == 429:
                             retry_delay = None
                             for detail in error.get("details", []):
-                                if detail.get("@type") == "type.googleapis.com/google.rpc.RetryInfo":
-                                    retry_delay = detail.get("retryDelay", "60s").rstrip("s")
+                                if (
+                                    detail.get("@type")
+                                    == "type.googleapis.com/google.rpc.RetryInfo"
+                                ):
+                                    retry_delay = detail.get(
+                                        "retryDelay", "60s"
+                                    ).rstrip("s")
                             error_msg = f"⚠️ Rate limit exceeded. Please try again in {retry_delay} seconds."
                             if "free_tier" in str(error):
                                 error_msg += "\nConsider upgrading to a paid tier for higher quotas."
@@ -205,16 +212,21 @@ async def get_ai_response(provider, prompt, api_key, stream=False):
             async with aiohttp.ClientSession() as session:
                 try:
                     async with session.post(
-                        ENDPOINTS[provider],
-                        headers=headers,
-                        json=data
+                        ENDPOINTS[provider], headers=headers, json=data
                     ) as resp:
                         if resp.status == 429:
                             error_data = await resp.json()
                             retry_delay = "60"
-                            for detail in error_data.get("error", {}).get("details", []):
-                                if detail.get("@type") == "type.googleapis.com/google.rpc.RetryInfo":
-                                    retry_delay = detail.get("retryDelay", "60s").rstrip("s")
+                            for detail in error_data.get("error", {}).get(
+                                "details", []
+                            ):
+                                if (
+                                    detail.get("@type")
+                                    == "type.googleapis.com/google.rpc.RetryInfo"
+                                ):
+                                    retry_delay = detail.get(
+                                        "retryDelay", "60s"
+                                    ).rstrip("s")
                             yield f"⚠️ Rate limit exceeded. Please try again in {retry_delay} seconds."
                             return
 
@@ -225,15 +237,22 @@ async def get_ai_response(provider, prompt, api_key, stream=False):
 
                         async for line in resp.content:
                             if line:
-                                text = line.decode('utf-8').strip()
-                                if text.startswith('data: '):
+                                text = line.decode("utf-8").strip()
+                                if text.startswith("data: "):
                                     data = text[6:]  # Remove 'data: ' prefix
-                                    if data == '[DONE]':
+                                    if data == "[DONE]":
                                         break
                                     try:
                                         json_data = json.loads(data)
-                                        if 'choices' in json_data and json_data['choices']:
-                                            content = json_data['choices'][0].get('delta', {}).get('content', '')
+                                        if (
+                                            "choices" in json_data
+                                            and json_data["choices"]
+                                        ):
+                                            content = (
+                                                json_data["choices"][0]
+                                                .get("delta", {})
+                                                .get("content", "")
+                                            )
                                             if content:
                                                 yield content
                                     except json.JSONDecodeError:
@@ -247,7 +266,7 @@ async def get_ai_response(provider, prompt, api_key, stream=False):
             data = {
                 "model": model,
                 "messages": [{"role": "user", "content": prompt}],
-                "stream": stream
+                "stream": stream,
             }
             if not stream:
                 response = await async_searcher(
@@ -255,23 +274,25 @@ async def get_ai_response(provider, prompt, api_key, stream=False):
                     headers=headers,
                     post=True,
                     json=data,
-                    re_json=True
+                    re_json=True,
                 )
                 yield response["choices"][0]["message"]["content"]
                 return
-                
+
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    ENDPOINTS[provider],
-                    headers=headers,
-                    json=data
+                    ENDPOINTS[provider], headers=headers, json=data
                 ) as resp:
                     async for line in resp.content:
                         if line:
                             try:
-                                json_line = json.loads(line.decode('utf-8').strip())
-                                if 'choices' in json_line and json_line['choices']:
-                                    content = json_line['choices'][0].get('delta', {}).get('content', '')
+                                json_line = json.loads(line.decode("utf-8").strip())
+                                if "choices" in json_line and json_line["choices"]:
+                                    content = (
+                                        json_line["choices"][0]
+                                        .get("delta", {})
+                                        .get("content", "")
+                                    )
                                     if content:
                                         yield content
                             except Exception:
@@ -291,11 +312,13 @@ async def gemini_ai(event):
 
     api_key = udB.get_key("GEMINI_API_KEY")
     if not api_key:
-        return await event.eor("⚠️ Please set Gemini API key using `setdb GEMINI_API_KEY your_api_key`")
+        return await event.eor(
+            "⚠️ Please set Gemini API key using `setdb GEMINI_API_KEY your_api_key`"
+        )
 
     msg = await event.eor("🤔 Thinking...")
     model = get_model("gemini")
-    
+
     header = (
         "🤖 **Google Gemini**\n"
         f"**Model:** `{model}`\n"
@@ -303,7 +326,7 @@ async def gemini_ai(event):
         f"**🔍 Prompt:**\n{prompt}\n\n"
         "**💡 Response:**\n"
     )
-    
+
     if event.client.me.bot:
         await msg.edit(header)
         response = ""
@@ -318,9 +341,10 @@ async def gemini_ai(event):
         async for chunk in get_ai_response("gemini", prompt, api_key, stream=True):
             response += chunk
         try:
-                await msg.edit(header + response)
+            await msg.edit(header + response)
         except Exception:
-                pass
+            pass
+
 
 @ultroid_cmd(pattern="antr( (.*)|$)")
 async def anthropic_ai(event):
@@ -331,11 +355,13 @@ async def anthropic_ai(event):
 
     api_key = udB.get_key("ANTHROPIC_KEY")
     if not api_key:
-        return await event.eor("⚠️ Please set Anthropic API key using `setdb ANTHROPIC_KEY your_api_key`")
+        return await event.eor(
+            "⚠️ Please set Anthropic API key using `setdb ANTHROPIC_KEY your_api_key`"
+        )
 
     msg = await event.eor("🤔 Thinking...")
     model = get_model("antr")
-    
+
     formatted_response = (
         "🧠 **Anthropic Claude**\n"
         f"**Model:** `{model}`\n"
@@ -343,7 +369,7 @@ async def anthropic_ai(event):
         f"**🔍 Prompt:**\n{prompt}\n\n"
         f"**💡 Response:**\n"
     )
-    
+
     if event.client.me.bot:
         await msg.edit(formatted_response)
         response = ""
@@ -361,6 +387,7 @@ async def anthropic_ai(event):
             await msg.edit(formatted_response + response)
         except Exception:
             pass
+
 
 @ultroid_cmd(pattern="gpt( (.*)|$)")
 async def openai_ai(event):
@@ -371,11 +398,13 @@ async def openai_ai(event):
 
     api_key = udB.get_key("OPENAI_API_KEY")
     if not api_key:
-        return await event.eor("⚠️ Please set GPT API key using `setdb OPENAI_API_KEY your_api_key`")
+        return await event.eor(
+            "⚠️ Please set GPT API key using `setdb OPENAI_API_KEY your_api_key`"
+        )
 
     msg = await event.eor("🤔 Thinking...")
     model = get_model("gpt")
-    
+
     header = (
         "🌟 **OpenAI GPT**\n"
         f"**Model:** `{model}`\n"
@@ -383,7 +412,7 @@ async def openai_ai(event):
         f"**🔍 Prompt:**\n{prompt}\n\n"
         "**💡 Response:**\n"
     )
-    
+
     if event.client.me.bot:
         await msg.edit(header)
         response = ""
@@ -394,13 +423,14 @@ async def openai_ai(event):
             except Exception:
                 pass
     else:
-        response =""
+        response = ""
         async for chunk in get_ai_response("gpt", prompt, api_key, stream=True):
             response += chunk
         try:
             await msg.edit(header + response)
         except Exception:
             pass
+
 
 @ultroid_cmd(pattern="deepseek( (.*)|$)")
 async def deepseek_ai(event):
@@ -411,11 +441,13 @@ async def deepseek_ai(event):
 
     api_key = udB.get_key("DEEPSEEK_API_KEY")
     if not api_key:
-        return await event.eor("⚠️ Please set DeepSeek API key using `setdb DEEPSEEK_API_KEY your_api_key`")
+        return await event.eor(
+            "⚠️ Please set DeepSeek API key using `setdb DEEPSEEK_API_KEY your_api_key`"
+        )
 
     msg = await event.eor("🤔 Thinking...")
     model = get_model("deepseek")
-    
+
     formatted_response = (
         "🤖 **DeepSeek AI**\n"
         f"**Model:** `{model}`\n"
@@ -423,7 +455,7 @@ async def deepseek_ai(event):
         f"**🔍 Prompt:**\n{prompt}\n\n"
         f"**💡 Response:**\n"
     )
-    
+
     if event.client.me.bot:
         await msg.edit(formatted_response)
         response = ""
@@ -442,4 +474,3 @@ async def deepseek_ai(event):
             await msg.edit(formatted_response + response)
         except Exception:
             pass
-

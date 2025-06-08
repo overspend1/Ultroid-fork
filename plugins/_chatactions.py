@@ -56,7 +56,7 @@ async def DummyHandler(ult):
     # force subscribe
     if (
         udB.get_key("FORCESUB")
-        and ((ult.user_joined or ult.user_added))
+        and (ult.user_joined or ult.user_added)
         and get_forcesetting(ult.chat_id)
     ):
         user = await ult.get_user()
@@ -92,7 +92,7 @@ async def DummyHandler(ult):
                         view_messages=False,
                     )
                     await ult.respond(
-                        f'**@UltroidBans:** Banned user detected and banned!\n`{str(is_banned)}`.\nBan reason: {is_banned["reason"]}',
+                        f"**@UltroidBans:** Banned user detected and banned!\n`{str(is_banned)}`.\nBan reason: {is_banned['reason']}",
                     )
 
             except BaseException:

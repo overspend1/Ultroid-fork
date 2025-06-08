@@ -24,24 +24,24 @@ __doc__ = get_help("help_autopic")
 
 async def get_google_images(query: str):
     """Extract image URLs from Google Images search results with fallbacks"""
-    
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
-    
+
     search_url = f"https://www.google.com/search?q={query}&tbm=isch"
-    
+
     # Domains to exclude
     excluded_domains = [
-        'gstatic.com',
-        'google.com',
-        'googleusercontent.com',
-        'ssl.google.com'
+        "gstatic.com",
+        "google.com",
+        "googleusercontent.com",
+        "ssl.google.com",
     ]
-    
+
     def is_valid_url(url):
         return not any(domain in url.lower() for domain in excluded_domains)
-    
+
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(search_url, headers=headers) as response:
@@ -53,7 +53,7 @@ async def get_google_images(query: str):
         search_match = re.search(search_pattern, html, re.DOTALL)
         if search_match:
             search_content = search_match.group(1)
-            url_pattern = r'https://[^\"]*?\.(?:jpg|jpeg|png|webp)'
+            url_pattern = r"https://[^\"]*?\.(?:jpg|jpeg|png|webp)"
             url_matches = re.finditer(url_pattern, search_content, re.IGNORECASE)
             for url_match in url_matches:
                 url = url_match.group(0)
@@ -66,7 +66,7 @@ async def get_google_images(query: str):
             matches = re.finditer(pattern, html, re.DOTALL)
             for match in matches:
                 div_content = match.group(1)
-                url_pattern = r'https://[^\"]*?\.(?:jpg|jpeg|png|webp)'
+                url_pattern = r"https://[^\"]*?\.(?:jpg|jpeg|png|webp)"
                 url_matches = re.finditer(url_pattern, div_content, re.IGNORECASE)
                 for url_match in url_matches:
                     url = url_match.group(0)
@@ -84,7 +84,7 @@ async def get_google_images(query: str):
 
         # Final fallback to data URLs if still no results
         if not img_urls:
-            pattern = r'data:image/(?:jpeg|png|webp);base64,[^\"]*'
+            pattern = r"data:image/(?:jpeg|png|webp);base64,[^\"]*"
             matches = re.finditer(pattern, html, re.IGNORECASE)
             for match in matches:
                 url = match.group(0)
@@ -92,7 +92,7 @@ async def get_google_images(query: str):
                     img_urls.append(url)
 
         return img_urls
-                
+
     except Exception as e:
         print(f"Error fetching Google images: {e}")
         return []
@@ -117,7 +117,9 @@ async def autopic(e):
         for lie in images:
             if udB.get_key("AUTOPIC") != search:
                 return
-            download_path, stime = await fast_download(lie, "resources/downloads/autopic.jpg")
+            download_path, stime = await fast_download(
+                lie, "resources/downloads/autopic.jpg"
+            )
             img = Image.open(download_path)
             img.save("resources/downloads/autopic.jpg")
             file = await e.client.upload_file("resources/downloads/autopic.jpg")

@@ -66,7 +66,7 @@ async def down(event):
         )
     except InvalidURL:
         return await msg.eor("`Invalid URL provided :(`", time=5)
-    await msg.eor(f"`{filename}` `downloaded in {time_formatter(d*1000)}.`")
+    await msg.eor(f"`{filename}` `downloaded in {time_formatter(d * 1000)}.`")
 
 
 @ultroid_cmd(
@@ -194,7 +194,7 @@ async def _(event):
                         force_document=force_doc,
                         thumb=thumb,
                         attributes=attributes,
-                        caption=f"`Uploaded` `{files}` `in {time_formatter(_*1000)}`",
+                        caption=f"`Uploaded` `{files}` `in {time_formatter(_ * 1000)}`",
                         reply_to=event.reply_to_msg_id or event,
                     )
                     s += 1
@@ -217,6 +217,6 @@ async def _(event):
             force_document=force_doc,
             thumb=thumb,
             attributes=attributes,
-            caption=f"`Uploaded` `{result}` `in {time_formatter(_*1000)}`",
+            caption=f"`Uploaded` `{result}` `in {time_formatter(_ * 1000)}`",
         )
     await msg.try_delete()

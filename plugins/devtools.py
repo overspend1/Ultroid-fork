@@ -45,7 +45,7 @@ fn = functions
 )
 async def _(e):
     xx = await e.eor(get_string("com_1"))
-    x, y = await bash("neofetch|sed 's/\x1B\\[[0-9;\\?]*[a-zA-Z]//g' >> neo.txt")
+    x, y = await bash("neofetch|sed 's/\x1b\\[[0-9;\\?]*[a-zA-Z]//g' >> neo.txt")
     if y and y.endswith("NOT_FOUND"):
         return await xx.edit(f"Error: `{y}`")
     with open("neo.txt", "r", encoding="utf-8") as neo:
@@ -323,29 +323,28 @@ def _stringify(text=None, *args, **kwargs):
 async def aexec(code, event):
     # Create a dedicated namespace for execution
     exec_globals = {
-        'print': _stringify,
-        'p': _stringify,
-        'message': event,
-        'event': event,
-        'client': event.client,
-        'reply': await event.get_reply_message(),
-        'chat': event.chat_id,
-        'u': u,
-        '__builtins__': __builtins__,
-        '__name__': __name__
+        "print": _stringify,
+        "p": _stringify,
+        "message": event,
+        "event": event,
+        "client": event.client,
+        "reply": await event.get_reply_message(),
+        "chat": event.chat_id,
+        "u": u,
+        "__builtins__": __builtins__,
+        "__name__": __name__,
     }
-    
+
     # Format the async function definition
-    wrapped_code = (
-        'async def __aexec(e, client):\n' +
-        '\n'.join(f'    {line}' for line in code.split('\n'))
+    wrapped_code = "async def __aexec(e, client):\n" + "\n".join(
+        f"    {line}" for line in code.split("\n")
     )
-    
+
     try:
         # Execute the wrapped code in our custom namespace
         exec(wrapped_code, exec_globals)
         # Get the defined async function
-        func = exec_globals['__aexec']
+        func = exec_globals["__aexec"]
         # Execute it with proper parameters
         return await func(event, event.client)
     except Exception as e:

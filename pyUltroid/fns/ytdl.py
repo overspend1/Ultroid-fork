@@ -33,7 +33,7 @@ async def ytdl_progress(k, start_time, event):
             + f"Total Size: {humanbytes(k['total_bytes'])}\n"
             + f"Downloaded: {humanbytes(k['downloaded_bytes'])}\n"
             + f"Speed: {humanbytes(k['speed'])}/s\n"
-            + f"ETA: {time_formatter(k['eta']*1000)}`"
+            + f"ETA: {time_formatter(k['eta'] * 1000)}`"
         )
         if round((time.time() - start_time) % 10.0) == 0:
             try:

@@ -26,7 +26,7 @@ async def eor(event, text=None, time=None, link_preview=False, edit_time=None, *
                 text,
                 link_preview=link_preview,
                 reply_to=reply_to,
-                **args
+                **args,
             )
         else:
             try:
@@ -52,7 +52,7 @@ async def eod(event, text=None, **kwargs):
 async def _try_delete(event):
     try:
         return await event.delete()
-    except (MessageDeleteForbiddenError):
+    except MessageDeleteForbiddenError:
         pass
     except BaseException as er:
         from . import LOGS

@@ -266,9 +266,7 @@ async def _(event):
     done, data = await get_paste(message)
     if not done and data.get("error"):
         return await xx.eor(data["error"])
-    reply_text = (
-        f"• **Pasted to SpaceBin :** [Space]({data['link']})\n• **Raw Url :** : [Raw]({data['raw']})"
-    )
+    reply_text = f"• **Pasted to SpaceBin :** [Space]({data['link']})\n• **Raw Url :** : [Raw]({data['raw']})"
     try:
         if event.client._bot:
             return await xx.eor(reply_text)
@@ -718,13 +716,17 @@ async def get_video_duration(file_path):
         print("Error running ffprobe:", e)
         return None
 
+
 async def get_thumbnail(file_path, thumbnail_path):
     try:
         await asyncio.create_subprocess_exec(
             "ffmpeg",
-            "-i", file_path,
-            "-ss", "00:00:04",
-            "-vframes", "1",  # Extract a single frame as the thumbnail
+            "-i",
+            file_path,
+            "-ss",
+            "00:00:04",
+            "-vframes",
+            "1",  # Extract a single frame as the thumbnail
             thumbnail_path,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
@@ -732,13 +734,14 @@ async def get_thumbnail(file_path, thumbnail_path):
     except Exception as e:
         print(f"Error extracting thumbnail: {e}")
 
+
 @ultroid_cmd(pattern="getmsg( ?(.*)|$)")
 async def get_restricted_msg(event):
     match = event.pattern_match.group(1).strip()
     if not match:
         await event.eor("`Please provide a link!`", time=5)
         return
-    
+
     xx = await event.eor("`Loading...`")
     chat, msg = get_chat_and_msgid(match)
     if not (chat and msg):
@@ -748,40 +751,45 @@ async def get_restricted_msg(event):
             "`https://t.me/c/1313492028/3`\n"
             "`tg://openmessage?user_id=1234567890&message_id=1`"
         )
-    
+
     try:
         input_entity = await event.client.get_input_entity(chat)
         message = await event.client.get_messages(input_entity, ids=msg)
     except BaseException as er:
         return await event.eor(f"**ERROR**\n`{er}`")
-    
+
     if not message:
         return await event.eor("`Message not found or may not exist.`")
-    
+
     try:
         await event.client.send_message(event.chat_id, message)
         await xx.try_delete()
         return
     except ChatForwardsRestrictedError:
         pass
-    
+
     if message.media:
         if isinstance(message.media, (MessageMediaPhoto, MessageMediaDocument)):
-            media_path, _ = await event.client.fast_downloader(message.document, show_progress=True, event=xx, message=get_string("com_5"))
+            media_path, _ = await event.client.fast_downloader(
+                message.document,
+                show_progress=True,
+                event=xx,
+                message=get_string("com_5"),
+            )
 
             caption = message.text or ""
 
             attributes = []
             if message.video:
                 duration = await get_video_duration(media_path.name)
-                
+
                 width, height = 0, 0
                 for attribute in message.document.attributes:
                     if isinstance(attribute, DocumentAttributeVideo):
                         width = attribute.w
                         height = attribute.h
                         break
-                
+
                 thumb_path = media_path.name + "_thumb.jpg"
                 await get_thumbnail(media_path.name, thumb_path)
 
@@ -794,7 +802,9 @@ async def get_restricted_msg(event):
                     )
                 )
             await xx.edit(get_string("com_6"))
-            media_path, _ = await event.client.fast_uploader(media_path.name, event=xx, show_progress=True, to_delete=True)
+            media_path, _ = await event.client.fast_uploader(
+                media_path.name, event=xx, show_progress=True, to_delete=True
+            )
 
             try:
                 await event.client.send_file(
@@ -826,4 +836,3 @@ async def get_restricted_msg(event):
             await event.eor("`Cannot process this type of media.`")
     else:
         await event.eor("`No media found in the message.`")
-

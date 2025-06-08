@@ -5,6 +5,7 @@ import sys
 
 vars = ["API_ID", "API_HASH", "SESSION"]
 
+
 def _check(z):
     new = []
     for var in vars:
@@ -14,6 +15,7 @@ def _check(z):
         new.append(ent)
     return True, new
 
+
 for z in range(5):
     n = str(z + 1)
     if z == 0:
@@ -21,7 +23,17 @@ for z in range(5):
     fine, out = _check(str(z))
     if fine:
         subprocess.Popen(
-            [sys.executable, "-m", "pyUltroid", out[0], out[1], out[2], out[3], out[4], n],
+            [
+                sys.executable,
+                "-m",
+                "pyUltroid",
+                out[0],
+                out[1],
+                out[2],
+                out[3],
+                out[4],
+                n,
+            ],
             stdin=None,
             stderr=None,
             stdout=None,
@@ -36,4 +48,3 @@ except Exception as er:
     print(er)
 finally:
     loop.close()
-

@@ -37,6 +37,7 @@ aki_photo = "https://graph.org/file/3cc8825c029fd0cab9edc.jpg"
 
 akipyLOGS = getLogger("akipy")
 
+
 @ultroid_cmd(pattern="akinator")
 async def akina(e):
     sta = Akinator()
@@ -86,7 +87,7 @@ async def doai(e):
 async def okah(e):
     try:
         mk = e.pattern_match.group(1).decode("utf-8").split("_")
-        #akipyLOGS.info(f"Parsed values: {mk}")
+        # akipyLOGS.info(f"Parsed values: {mk}")
 
         if len(mk) < 3:
             akipyLOGS.error("Pattern match did not return enough parts.")
@@ -108,7 +109,10 @@ async def okah(e):
             # Game is not won yet, continue asking questions
             buttons = [
                 [Button.inline(o, f"aka_{ch}_{mid}_{o}") for o in ["Yes", "No", "Idk"]],
-                [Button.inline(o, f"aka_{ch}_{mid}_{o}") for o in ["Probably", "Probably Not"]],
+                [
+                    Button.inline(o, f"aka_{ch}_{mid}_{o}")
+                    for o in ["Probably", "Probably Not"]
+                ],
             ]
             await e.edit(gm.question, buttons=buttons)
 
@@ -139,6 +143,7 @@ async def eiagx(e):
 # ----------------------- Main Command ------------------- #
 
 GIMAGE = "https://graph.org/file/1c51015bae5205a65fd69.jpg"
+
 
 @asst_cmd(pattern="startgame", owner=True)
 async def magic(event):
@@ -244,10 +249,17 @@ async def choose_cata(event):
             if TRIVIA_CHATS[chat].get("cancel") is not None:
                 break
             ansi = str(uuid.uuid1()).split("-")[0].encode()
-            opts = [PollAnswer(TextWithEntities(unescape(q["correct_answer"]), entities=[]), ansi)]
+            opts = [
+                PollAnswer(
+                    TextWithEntities(unescape(q["correct_answer"]), entities=[]), ansi
+                )
+            ]
             [
                 opts.append(
-                    PollAnswer(TextWithEntities(unescape(a), entities=[]), str(uuid.uuid1()).split("-")[0].encode())
+                    PollAnswer(
+                        TextWithEntities(unescape(a), entities=[]),
+                        str(uuid.uuid1()).split("-")[0].encode(),
+                    )
                 )
                 for a in q["incorrect_answers"]
             ]
@@ -256,8 +268,7 @@ async def choose_cata(event):
                 Poll(
                     0,
                     TextWithEntities(
-                        f"[{copper+1}].  " + unescape(q["question"]),
-                        entities=[]
+                        f"[{copper + 1}].  " + unescape(q["question"]), entities=[]
                     ),
                     answers=opts,
                     public_voters=True,

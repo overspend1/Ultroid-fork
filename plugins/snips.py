@@ -19,6 +19,7 @@
 • Use :
     type `$(ur snip word)` get setted reply.
 """
+
 import os
 
 from . import upload_file as uf

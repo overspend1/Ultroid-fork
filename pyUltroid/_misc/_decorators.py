@@ -113,7 +113,7 @@ def ultroid_cmd(
             except FloodWaitError as fwerr:
                 await asst.send_message(
                     udB.get_key("LOG_CHANNEL"),
-                    f"`FloodWaitError:\n{str(fwerr)}\n\nSleeping for {tf((fwerr.seconds + 10)*1000)}`",
+                    f"`FloodWaitError:\n{str(fwerr)}\n\nSleeping for {tf((fwerr.seconds + 10) * 1000)}`",
                 )
                 await ultroid_bot.disconnect()
                 await asyncio.sleep(fwerr.seconds + 10)

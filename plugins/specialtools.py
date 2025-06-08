@@ -31,6 +31,7 @@
 • `{i}wall <query>`
     Search Hd Wallpaper as Per ur Wish..
 """
+
 import os
 import time
 from datetime import datetime as dt
@@ -61,6 +62,7 @@ from .beautify import all_col
 
 File = []
 scraper = create_scraper()
+
 
 @ultroid_cmd(
     pattern="getaudio$",
@@ -251,7 +253,9 @@ Zodiac -: {sign}
         reply_to=event.reply_to_msg_id,
     )
 
+
 session = Session()
+
 
 @ultroid_cmd(pattern="sticker( (.*)|$)")
 async def _(event):
@@ -259,40 +263,39 @@ async def _(event):
     if not x:
         return await event.eor("`Give something to search`")
     uu = await event.eor(get_string("com_1"))
-    
+
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
-    
+
     max_retries = 3
     retry_count = 0
-    
+
     while retry_count < max_retries:
         try:
             response = scraper.get(
-                f"https://combot.org/telegram/stickers?q={x}",
-                headers=headers
+                f"https://combot.org/telegram/stickers?q={x}", headers=headers
             ).content
-            
+
             # Check if response contains Cloudflare challenge
             if "Just a moment..." in response.decode():
                 retry_count += 1
-                await asyncio.sleep(2) # Wait before retry
+                await asyncio.sleep(2)  # Wait before retry
                 continue
-                
+
             z = bs(response, "html.parser")
             packs = z.find_all("a", {"class": "stickerset__title"})
-            
+
             if not packs:
                 return await uu.edit(get_string("spcltool_9"))
-                
-            break # Success - exit loop
-            
+
+            break  # Success - exit loop
+
         except Exception as er:
             retry_count += 1
             await asyncio.sleep(2)
             continue
-    
+
     if retry_count >= max_retries:
         return await uu.edit("`Failed to fetch stickers after multiple retries`")
     try:
@@ -311,9 +314,10 @@ async def _(event):
         for href, title in sticks.items():
             a += f"<a href={href}>{title}</a>\n"
         await uu.edit(a, parse_mode="html")
-        
+
     except Exception as e:
         await uu.edit(f"`Error: {str(e)}`\nTry again later.")
+
 
 @ultroid_cmd(pattern="wall( (.*)|$)")
 async def wall(event):

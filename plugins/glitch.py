@@ -10,6 +10,7 @@
 •`{i}glitch <reply to media>`
     gives a glitchy gif.
 """
+
 import os
 
 from . import bash, get_string, mediainfo, ultroid_cmd

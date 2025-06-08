@@ -89,9 +89,9 @@ async def warn(e):
         ok = await ultroid_bot.get_entity(user)
         user = inline_mention(ok)
         r = r.split("|$|")
-        text = f"User {user} Got {action} Due to {count+1} Warns.\n\n"
+        text = f"User {user} Got {action} Due to {count + 1} Warns.\n\n"
         for x in range(c):
-            text += f"•**{x+1}.** {r[x]}\n"
+            text += f"•**{x + 1}.** {r[x]}\n"
         await e.eor(text)
         return reset_warn(e.chat_id, ok.id)
     add_warn(e.chat_id, user, count + 1, r)
@@ -99,7 +99,7 @@ async def warn(e):
     user = inline_mention(ok)
     await eor(
         e,
-        f"**WARNING :** {count+1}/{number}\n**To :**{user}\n**Be Careful !!!**\n\n**Reason** : {reason}",
+        f"**WARNING :** {count + 1}/{number}\n**To :**{user}\n**Be Careful !!!**\n\n**Reason** : {reason}",
     )
 
 
@@ -156,7 +156,7 @@ async def twarns(e):
         r = r.split("|$|")
         text = f"User {user} Got {c} Warns.\n\n"
         for x in range(c):
-            text += f"•**{x+1}.** {r[x]}\n"
+            text += f"•**{x + 1}.** {r[x]}\n"
         await e.eor(text)
     else:
         await e.eor("`No Warnings`")

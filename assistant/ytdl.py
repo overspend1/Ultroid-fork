@@ -272,7 +272,7 @@ async def _(event):
     description = description if description != "" else "None"
     text = f"**Title: [{title}]({_yt_base_url}{vid_id})**\n\n"
     text += f"`📝 Description: {description}\n\n"
-    text += f"「 Duration: {time_formatter(int(duration)*1000)} 」\n"
+    text += f"「 Duration: {time_formatter(int(duration) * 1000)} 」\n"
     text += f"「 Artist: {artist} 」\n"
     text += f"「 Views: {views} 」\n"
     text += f"「 Likes: {likes} 」\n"

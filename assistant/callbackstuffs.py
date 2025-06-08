@@ -37,6 +37,7 @@ GDrive = GDriveManager() if GDriveManager else None
 uploader = CatboxUploader()
 # --------------------------------------------------------------------#
 
+
 def text_to_url(event):
     """function to get media url (with|without) Webpage"""
     if isinstance(event.media, MessageMediaWebPage):
@@ -325,6 +326,7 @@ async def update(eve):
         await bash("pip3 install -r requirements.txt --break-system-packages")
         execl(sys.executable, sys.executable, "-m", "pyUltroid")
 
+
 @callback(re.compile("changes(.*)"), owner=True)
 async def changes(okk):
     match = okk.data_match.group(1).decode("utf-8")
@@ -559,7 +561,9 @@ async def emoji(event):
     var = "EMOJI_IN_HELP"
     name = f"Emoji in `{HNDLR}help` menu"
     async with event.client.conversation(pru) as conv:
-        await conv.send_message("Send emoji u want to set 🙃.\n\nUse /cancel to cancel.")
+        await conv.send_message(
+            "Send emoji u want to set 🙃.\n\nUse /cancel to cancel."
+        )
         response = conv.wait_event(events.NewMessage(chats=pru))
         response = await response
         themssg = response.message.message

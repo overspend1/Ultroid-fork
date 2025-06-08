@@ -33,6 +33,7 @@
 • `{i}webshot <url>`
     Get a screenshot of the webpage.
 """
+
 import glob
 import io
 import os
@@ -323,7 +324,7 @@ async def _(e):
         tfls = "0 B"
     if not hb(fos + fls):
         ttol = "0 B"
-    text += f"\n\n`Folders` :  `{foc}` :   `{tfos}`\n`Files` :       `{flc}` :   `{tfls}`\n`Total` :       `{flc+foc}` :   `{ttol}`"
+    text += f"\n\n`Folders` :  `{foc}` :   `{tfos}`\n`Files` :       `{flc}` :   `{tfls}`\n`Total` :       `{flc + foc}` :   `{ttol}`"
     try:
         if (flc + foc) > 100:
             text = text.replace("`", "")
@@ -333,7 +334,6 @@ async def _(e):
             out_file.name = "output.txt"
             await e.reply(f"`{e.text}`", file=out_file, thumb=ULTConfig.thumb)
         await e.delete()
-
 
 
 def sanga_seperator(sanga_list):
@@ -460,4 +460,3 @@ async def webss(event):
         )
         os.remove(pic)
     await xx.delete()
-

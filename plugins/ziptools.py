@@ -22,6 +22,7 @@
    To set Password: `{i}dozip <password>`
 
 """
+
 import os
 import time
 

@@ -16,6 +16,7 @@
 • `{i}qrdecode <reply to qrcode>`
    `It decodes the qrcode.`
 """
+
 import os
 
 from pyUltroid import ULTConfig

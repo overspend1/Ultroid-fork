@@ -51,11 +51,13 @@ async def get_timezone(offset_seconds, use_utc=False):
                 return f"{m} ({timezone}{sign}{hours:02d})"
         return "Timezone not found"
 
+
 async def getWindinfo(speed: str, degree: str) -> str:
     dirs = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
     ix = round(degree / (360.00 / len(dirs)))
     kmph = str(float(speed) * 3.6) + " km/h"
     return f"[{dirs[ix % len(dirs)]}] {kmph}"
+
 
 async def get_air_pollution_data(latitude, longitude, api_key):
     url = f"http://api.openweathermap.org/data/2.5/air_pollution?lat={latitude}&lon={longitude}&appid={api_key}"

@@ -26,7 +26,7 @@ from . import (
     mediainfo,
     stdr,
     time_formatter,
-    ultroid_cmd
+    ultroid_cmd,
 )
 
 __doc__ = get_help("help_audiotools")
@@ -149,7 +149,11 @@ async def ex_aud(e):
     f_time = time.time()
     try:
         n_file, _ = await e.client.fast_uploader(
-            out_file, show_progress=True, event=e, message="Uploading...", to_delete=True
+            out_file,
+            show_progress=True,
+            event=e,
+            message="Uploading...",
+            to_delete=True,
         )
 
     except FileNotFoundError:
