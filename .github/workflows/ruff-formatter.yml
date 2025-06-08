@@ -1,0 +1,44 @@
+name: format code with ruff
+
+on:
+  push:
+
+jobs:
+  code-format:
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Run ruff to lint and format code
+        run: |
+          uv tool run ruff check . --exit-zero
+          uv tool run ruff format .
+          git add -u
+
+      - name: Commit and push changes
+        id: commit
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff-index --quiet HEAD --; then
+            echo "no_changes=true" >> $GITHUB_ENV
+            echo "No changes to commit."
+          else
+            git commit -s -m "format: auto-format code by ruff."
+            git push origin ${{ github.ref }}
+            echo "no_changes=false" >> $GITHUB_ENV
+          fi
