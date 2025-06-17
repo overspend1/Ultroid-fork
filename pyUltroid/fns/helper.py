@@ -18,7 +18,6 @@ from urllib.request import urlretrieve
 from .. import run_as_module
 
 if run_as_module:
-    from .. import udB
     from ..configs import Var
 
 
@@ -231,6 +230,7 @@ if run_as_module:
     @run_async
     def gen_chlog(repo, diff):
         """Generate Changelogs..."""
+        from .. import udB
         UPSTREAM_REPO_URL = (
             udB.get_key("UPSTREAM_REPO") or repo.remotes[0].config_reader.get("url")
         ).replace(".git", "")
@@ -272,7 +272,7 @@ async def bash(cmd, run_code=0):
 
 
 async def updater():
-    from .. import LOGS
+    from .. import LOGS, udB
 
     if not Repo:
         LOGS.info("Git is not installed.")
@@ -285,7 +285,8 @@ async def updater():
         if isinstance(e, InvalidGitRepositoryError):
             repo = Repo.init()
             off_repo = (
-                udB.get_key("UPSTREAM_REPO") or "https://github.com/ThePrateekBhatia/Ultroid"
+                udB.get_key("UPSTREAM_REPO")
+                or "https://github.com/ThePrateekBhatia/Ultroid"
             )
             if "upstream" not in repo.remotes:
                 origin = repo.create_remote("upstream", off_repo)
