@@ -1,3 +1,7 @@
+pip-requirements
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
 # Important Requirements here.
 telethon
 gitpython

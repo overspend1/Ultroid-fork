@@ -62,6 +62,10 @@ async def gdown(event):
 )
 async def files(event):
     GDrive = GDriveManager()
+    if not GDrive.creds or not GDrive.creds.valid:
+        return await event.eor(
+            "G-Drive credentials are not valid. Please try setting them up again via your assistant bot using `/start set`."
+        )
     if not os.path.exists(GDrive.token_file):
         return await event.eor(get_string("gdrive_6").format(asst.me.username))
     eve = await event.eor(get_string("com_1"))

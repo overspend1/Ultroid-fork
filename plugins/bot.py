@@ -317,6 +317,21 @@ async def inline_alive(ult):
     await ult.answer(result)
 
 
+@ultroid_cmd(pattern="setrepo( (.*)|$)")
+async def set_repo(event):
+    """
+    Sets the upstream repository for updates.
+    Usage: .setrepo <your_fork_url>
+    """
+    repo_url = event.pattern_match.group(2)
+    if not repo_url:
+        return await eor(event, "Please provide your forked repository URL. Example: `.setrepo https://github.com/user/repo`")
+    if not repo_url.endswith(".git"):
+        repo_url += ".git"
+    udB.set_key("UPSTREAM_REPO", repo_url)
+    await eor(event, f"Upstream repository has been set to: `{repo_url}`")
+
+
 @ultroid_cmd(pattern="update( (.*)|$)")
 async def _(e):
     xx = await e.eor(get_string("upd_1"))
@@ -331,7 +346,13 @@ async def _(e):
         os.execl(sys.executable, "python3", "-m", "pyUltroid")
         # return
     m = await updater()
-    branch = (Repo.init()).active_branch
+    try:
+        repo = Repo()
+        branch = repo.active_branch
+    except (NoSuchPathError, InvalidGitRepositoryError):
+        repo = None
+        branch = "main"
+
     if m:
         x = await asst.send_file(
             udB.get_key("LOG_CHANNEL"),
@@ -347,8 +368,14 @@ async def _(e):
             link_preview=False,
         )
     else:
+        repo_url = udB.get_key("UPSTREAM_REPO")
+        if not repo_url and repo:
+            repo_url = repo.remotes[0].config_reader.get("url")
+        elif not repo_url:
+            repo_url = "https://github.com/TeamUltroid/Ultroid"
+
         await xx.edit(
-            f'<code>Your BOT is </code><strong>up-to-date</strong><code> with </code><strong><a href="https://github.com/TeamUltroid/Ultroid/tree/{branch}">[{branch}]</a></strong>',
+            f'<code>Your BOT is </code><strong>up-to-date</strong><code> with </code><strong><a href="{repo_url.replace(".git", "")}/tree/{branch}">[{branch}]</a></strong>',
             parse_mode="html",
             link_preview=False,
         )
