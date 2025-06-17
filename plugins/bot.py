@@ -334,6 +334,10 @@ async def set_repo(event):
 
 @ultroid_cmd(pattern="update( (.*)|$)")
 async def _(e):
+    """Checks for updates and installs them.
+    Usage: .update [soft/fast]
+    - .update: Checks for updates.
+    - .update soft or .update fast: Pulls changes and restarts."""
     xx = await e.eor(get_string("upd_1"))
     if e.pattern_match.group(1).strip() and (
         "fast" in e.pattern_match.group(1).strip()
