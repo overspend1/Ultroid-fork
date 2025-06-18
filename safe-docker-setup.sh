@@ -105,23 +105,50 @@ mkdir -p "$DOCKER_DIR"/{downloads,uploads,logs,resources/session,backups}
 # Create Docker-specific .env file
 echo -e "${BLUE}⚙️ Creating Docker-specific configuration...${NC}"
 
-cat > "$DOCKER_DIR/.env" << 'EOF'
-# Ultroid Docker Environment - Separate from your main bot
-# Copy your credentials here (this won't affect your existing setup)
+# Auto-populate from existing config if available
+AUTO_SESSION=""
+AUTO_API_ID=""
+AUTO_API_HASH=""
+AUTO_BOT_TOKEN=""
+AUTO_LOG_CHANNEL=""
 
-# === REQUIRED (Copy from your existing setup) ===
-SESSION=
-API_ID=
-API_HASH=
+# Try to extract from existing .env file
+if [ -f "../.env" ]; then
+    echo -e "${GREEN}📋 Found existing .env file, copying credentials...${NC}"
+    AUTO_SESSION=$(grep "^SESSION=" ../.env 2>/dev/null | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+    AUTO_API_ID=$(grep "^API_ID=" ../.env 2>/dev/null | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+    AUTO_API_HASH=$(grep "^API_HASH=" ../.env 2>/dev/null | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+    AUTO_BOT_TOKEN=$(grep "^BOT_TOKEN=" ../.env 2>/dev/null | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+    AUTO_LOG_CHANNEL=$(grep "^LOG_CHANNEL=" ../.env 2>/dev/null | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+fi
+
+# Try to extract from environment variables (if running in current session)
+if [ -z "$AUTO_SESSION" ] && [ ! -z "$SESSION" ]; then
+    AUTO_SESSION="$SESSION"
+fi
+if [ -z "$AUTO_API_ID" ] && [ ! -z "$API_ID" ]; then
+    AUTO_API_ID="$API_ID"
+fi
+if [ -z "$AUTO_API_HASH" ] && [ ! -z "$API_HASH" ]; then
+    AUTO_API_HASH="$API_HASH"
+fi
+
+cat > "$DOCKER_DIR/.env" << EOF
+# Ultroid Docker Environment - Auto-populated from existing setup
+# This is completely separate from your main bot configuration
+
+# === REQUIRED (Auto-populated from your existing setup) ===
+SESSION=${AUTO_SESSION}
+API_ID=${AUTO_API_ID}
+API_HASH=${AUTO_API_HASH}
 
 # === DOCKER DATABASE (Isolated) ===
 REDIS_URI=redis://redis:6380
 REDIS_PASSWORD=ultroid_docker_123
 
-# === OPTIONAL ===
-BOT_TOKEN=
-OWNER_ID=
-LOG_CHANNEL=
+# === OPTIONAL (Auto-populated if available) ===
+BOT_TOKEN=${AUTO_BOT_TOKEN}
+LOG_CHANNEL=${AUTO_LOG_CHANNEL}
 
 # === DOCKER-SPECIFIC SETTINGS ===
 BOT_MODE=True
@@ -314,10 +341,22 @@ EOF
 
 echo -e "\n${GREEN}✅ Safe Docker environment created!${NC}"
 echo -e "\n${BLUE}📁 Location: ${DOCKER_DIR}/${NC}"
-echo -e "\n${YELLOW}📋 Next steps:${NC}"
-echo -e "   1. ${BLUE}cd ${DOCKER_DIR}${NC}"
-echo -e "   2. ${BLUE}nano .env${NC} (add your SESSION, API_ID, API_HASH)"
-echo -e "   3. ${BLUE}./manage.sh start${NC}"
+
+# Show configuration status
+echo -e "\n${BLUE}📋 Configuration Status:${NC}"
+if [ ! -z "$AUTO_SESSION" ] && [ ! -z "$AUTO_API_ID" ] && [ ! -z "$AUTO_API_HASH" ]; then
+    echo -e "   ${GREEN}✅ SESSION, API_ID, API_HASH auto-populated from existing setup${NC}"
+    echo -e "   ${GREEN}✅ Ready to start immediately!${NC}"
+    echo -e "\n${YELLOW}� Quick Start:${NC}"
+    echo -e "   1. ${BLUE}cd ${DOCKER_DIR}${NC}"
+    echo -e "   2. ${BLUE}./manage.sh start${NC}"
+else
+    echo -e "   ${YELLOW}⚠️  Please manually add your credentials${NC}"
+    echo -e "\n${YELLOW}�📋 Next steps:${NC}"
+    echo -e "   1. ${BLUE}cd ${DOCKER_DIR}${NC}"
+    echo -e "   2. ${BLUE}nano .env${NC} (add your SESSION, API_ID, API_HASH)"
+    echo -e "   3. ${BLUE}./manage.sh start${NC}"
+fi
 echo ""
 echo -e "${GREEN}🛡️ Your existing bot configuration is completely safe!${NC}"
 echo -e "${BLUE}📖 Check ${DOCKER_DIR}/README.md for detailed instructions${NC}"
