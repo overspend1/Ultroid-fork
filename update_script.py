@@ -55,18 +55,52 @@ def main():
     if not run_command("git fetch origin"):
         print("❌ Failed to fetch updates")
         return False
-    
-    # Get current branch
+      # Get current branch
     result = subprocess.run("git branch --show-current", shell=True, capture_output=True, text=True)
     current_branch = result.stdout.strip() or "main"
     
     print(f"🌿 Current branch: {current_branch}")
     
-    # Pull updates
+    # Check for untracked files that might conflict
+    print("🔍 Checking for conflicting files...")
+    untracked_result = subprocess.run("git ls-files --others --exclude-standard", shell=True, capture_output=True, text=True)
+    untracked_files = untracked_result.stdout.strip().split('\n') if untracked_result.stdout.strip() else []
+    
+    # If update_script.py is untracked and would conflict, temporarily move it
+    script_moved = False
+    if "update_script.py" in untracked_files:
+        print("📦 Temporarily moving update script to avoid conflicts...")
+        if run_command("move update_script.py update_script_temp.py"):
+            script_moved = True
+    
+    # Stash any local changes first
+    print("💾 Stashing local changes...")
+    run_command("git stash push -m 'Auto-stash before update'")
+      # Pull updates
     print("⬇️ Pulling updates...")
     if not run_command(f"git pull origin {current_branch}"):
         print("❌ Failed to pull updates")
+        # Try to restore stashed changes
+        print("🔄 Attempting to restore stashed changes...")
+        run_command("git stash pop")
+        # Restore moved script if it was moved
+        if script_moved and os.path.exists("update_script_temp.py"):
+            print("🔄 Restoring update script...")
+            run_command("move update_script_temp.py update_script.py")
         return False
+      # Restore stashed changes if any
+    print("🔄 Restoring local changes...")
+    stash_result = subprocess.run("git stash list", shell=True, capture_output=True, text=True)
+    if "Auto-stash before update" in stash_result.stdout:
+        if not run_command("git stash pop"):
+            print("⚠️ Warning: Could not restore some local changes. Check git stash list.")
+        else:
+            print("✅ Local changes restored successfully")
+    
+    # Restore moved script if it was moved
+    if script_moved and os.path.exists("update_script_temp.py"):
+        print("🔄 Restoring update script...")
+        run_command("move update_script_temp.py update_script.py")
     
     # Update dependencies
     print("📦 Installing/updating dependencies...")
