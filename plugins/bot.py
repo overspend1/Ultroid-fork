@@ -394,7 +394,7 @@ Description: Checks for updates for your userbot.
 • `{tr}update now original`: Forces an update from the official Ultroid repo.
 
 Note: Use `{tr}setrepo <your_fork_url>` to update from your own fork."""
-    if Var.HEROKU_APP and Var.HEROKU_API_KEY:
+    if Var.HEROKU_API and Var.HEROKU_APP_NAME:
         return await event.eor(
             "Heroku user! Please update from Heroku dashboard.",
         )
