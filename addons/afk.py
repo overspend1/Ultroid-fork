@@ -5,30 +5,21 @@
 # PLease read the GNU Affero General Public License in
 # <https://www.github.com/TeamUltroid/Ultroid/blob/main/LICENSE/>.
 
-from . import get_help
-
-__doc__ = get_help("help_afk")
-
-
 import asyncio
 
 from telethon import events
 
-from pyUltroid.dB.afk_db import add_afk, del_afk, is_afk
-from pyUltroid.dB.base import KeyManager
+from pyUltroid import asst, ultroid_bot
+from pyUltroid.config import LOG_CHANNEL, NOSPAM_CHAT
+from pyUltroid.db.afk_db import add_afk, del_afk, is_afk
+from pyUltroid.db.base import KeyManager
+from pyUltroid.fns.decorators import ultroid_cmd
+from pyUltroid.fns.helper import get_help, get_string
+from pyUltroid.fns.tools import mediainfo, upload_file
+from pyUltroid.udB import udB
 
-from . import (
-    LOG_CHANNEL,
-    NOSPAM_CHAT,
-    Redis,
-    asst,
-    get_string,
-    mediainfo,
-    udB,
-    ultroid_bot,
-    ultroid_cmd,
-    upload_file
-)
+__doc__ = get_help("help_afk")
+
 
 old_afk_msg = []
 
@@ -93,7 +84,11 @@ async def set_afk(event):
 
 
 async def remove_afk(event):
-    if event.is_private and udB.get_key("PMSETTING") and not is_approved(event.chat_id):
+    if (
+        event.is_private
+        and udB.get_key("PMSETTING")
+        and not is_approved(event.chat_id)
+    ):
         return
     elif "afk" in event.text.lower():
         return
@@ -114,7 +109,11 @@ async def remove_afk(event):
 
 
 async def on_afk(event):
-    if event.is_private and Redis("PMSETTING") and not is_approved(event.chat_id):
+    if (
+        event.is_private
+        and udB.get_key("PMSETTING")
+        and not is_approved(event.chat_id)
+    ):
         return
     elif "afk" in event.text.lower():
         return

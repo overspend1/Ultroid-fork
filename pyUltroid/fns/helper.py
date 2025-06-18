@@ -227,13 +227,17 @@ if run_as_module:
             f"{sys.executable} -m pip install --no-cache-dir -r requirements.txt"
         )
 
+
     @run_async
-    def gen_chlog(repo, diff):
+    def gen_chlog(repo, diff, repo_url=None):
         """Generate Changelogs..."""
         from .. import udB
-        UPSTREAM_REPO_URL = (
-            udB.get_key("UPSTREAM_REPO") or repo.remotes[0].config_reader.get("url")
-        ).replace(".git", "")
+        if not repo_url:
+            UPSTREAM_REPO_URL = (
+                udB.get_key("UPSTREAM_REPO") or repo.remotes[0].config_reader.get("url")
+            ).replace(".git", "")
+        else:
+            UPSTREAM_REPO_URL = repo_url.replace(".git", "")
         ac_br = repo.active_branch.name
         ch_log = tldr_log = ""
         ch = f"<b>Ultroid {ultroid_version} updates for <a href={UPSTREAM_REPO_URL}/tree/{ac_br}>[{ac_br}]</a>:</b>"
@@ -271,7 +275,7 @@ async def bash(cmd, run_code=0):
 # Will add in class
 
 
-async def updater():
+async def updater(repo_url=None):
     from .. import LOGS, udB
 
     if not Repo:
@@ -285,8 +289,7 @@ async def updater():
         if isinstance(e, InvalidGitRepositoryError):
             repo = Repo.init()
             off_repo = (
-                udB.get_key("UPSTREAM_REPO")
-                or "https://github.com/ThePrateekBhatia/Ultroid"
+                repo_url or udB.get_key("UPSTREAM_REPO") or "https://github.com/ThePrateekBhatia/Ultroid"
             )
             if "upstream" not in repo.remotes:
                 origin = repo.create_remote("upstream", off_repo)
@@ -299,12 +302,13 @@ async def updater():
 
     ac_br = repo.active_branch.name
 
-    off_repo = udB.get_key("UPSTREAM_REPO") or repo.remotes[0].config_reader.get("url")
+    if not repo_url:
+        repo_url = udB.get_key("UPSTREAM_REPO") or repo.remotes[0].config_reader.get("url")
 
     if "upstream" not in repo.remotes:
-        repo.create_remote("upstream", off_repo)
+        repo.create_remote("upstream", repo_url)
     else:
-        repo.remote("upstream").set_url(off_repo)
+        repo.remote("upstream").set_url(repo_url)
 
     ups_rem = repo.remote("upstream")
 
@@ -314,7 +318,7 @@ async def updater():
         LOGS.info(f"Failed to fetch from upstream remote: {e}")
         return False
 
-    changelog, tl_chnglog = await gen_chlog(repo, f"HEAD..upstream/{ac_br}")
+    changelog, tl_chnglog = await gen_chlog(repo, f"HEAD..upstream/{ac_br}", repo_url)
     return bool(changelog)
 
 

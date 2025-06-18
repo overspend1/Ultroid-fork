@@ -13,6 +13,7 @@ import os
 import re
 import sys
 import time
+import asyncio
 from platform import python_version as pyver
 from random import choice
 
@@ -378,6 +379,29 @@ async def get_updates(ulttext, repo_url):
     return repo, True, changelog
 
 
+def launch_update_script(repo_url=None):
+    """Launch the external update script and shutdown the bot."""
+    import subprocess
+    import sys
+    
+    script_path = "update_script.py"
+    
+    # Prepare command arguments
+    cmd = [sys.executable, script_path]
+    if repo_url:
+        cmd.append(repo_url)
+    
+    # Add original start arguments so the script knows how to restart
+    if len(sys.argv) > 1:
+        cmd.extend(sys.argv[1:])
+    
+    # Launch the update script
+    subprocess.Popen(cmd, cwd=os.getcwd())
+    
+    # Shutdown the bot
+    os._exit(0)
+
+
 @ultroid_cmd(
     pattern="update(.*)",
     command="update",
@@ -389,12 +413,12 @@ async def updater(event):
 Description: Checks for updates for your userbot.
 
 • `{tr}update`: Checks for updates from your forked repo (if set), otherwise from original.
-• `{tr}update now`: Forces an update from the configured repo.
+• `{tr}update now`: Forces an immediate update using external script from the configured repo.
 • `{tr}update original`: Checks for updates from the official Ultroid repo.
-• `{tr}update now original`: Forces an update from the official Ultroid repo.
+• `{tr}update now original`: Forces an immediate update from the official Ultroid repo.
 
 Note: Use `{tr}setrepo <your_fork_url>` to update from your own fork."""
-    if Var.HEROKU_API and Var.HEROKU_APP_NAME:
+    if Var.HEROKU_API:
         return await event.eor(
             "Heroku user! Please update from Heroku dashboard.",
         )
@@ -411,10 +435,24 @@ Note: Use `{tr}setrepo <your_fork_url>` to update from your own fork."""
         or "https://github.com/ThePrateekBhatia/Ultroid"
     )
 
-    off_repo, is_new, changelog = await get_updates(
-        ulttext,
-        repo_url=repo_url,
-    )
+    if is_now:
+        # Use external script for immediate update
+        await ulttext.edit(
+            "🔄 **Starting update process...**\n\n"
+            f"📦 Repository: `{repo_url}`\n"
+            "⚡ Using external script for reliable update\n\n"
+            "🤖 Bot will shutdown and restart automatically after update completes."
+        )
+        
+        # Wait a moment for the message to be sent
+        await asyncio.sleep(2)
+        
+        # Launch external update script and shutdown
+        launch_update_script(repo_url)
+        return
+
+    # Regular update check (non-destructive)
+    off_repo, is_new, changelog = await get_updates(ulttext, repo_url=repo_url)
 
     if not off_repo:
         return
@@ -422,41 +460,38 @@ Note: Use `{tr}setrepo <your_fork_url>` to update from your own fork."""
     branch = off_repo.active_branch.name
 
     if is_new:
-        if is_now:
-            await ulttext.edit("`Force updating...`")
-            try:
-                await bash(f"git config remote.upstream.url {repo_url} && git pull -f upstream {branch}")
-                await bash("pip3 install -r requirements.txt --break-system-packages")
-                call_back()
-                await ulttext.edit("`Update successful! Restarting...`")
-                os.execl(sys.executable, sys.executable, "-m", "pyUltroid")
-            except Exception as e:
-                await ulttext.edit(f"**Update failed!**\n\n**Error:**\n`{e}`")
-            finally:
-                try:
-                    off_repo.delete_remote("upstream")
-                except Exception:
-                    pass
-            return
-
+        # Show update available with options
+        buttons = [
+            [
+                Button.inline("🔄 Update Now", data=f"update_now|{repo_url}"),
+                Button.inline("📋 View Changes", data=f"update_changelog|{repo_url}"),
+            ],
+            [Button.inline("❌ Dismiss", data="close_update")],
+        ]
+        
         m = await asst.send_message(
             udB.get_key("LOG_CHANNEL"),
-            changelog,
-            buttons=[
-                Button.inline("Update Now", data=f"update_now|{repo_url}"),
-                Button.inline("Dismiss", data="close_update"),
-            ],
+            f"🆕 **Update Available!**\n\n"
+            f"📦 Repository: `{repo_url}`\n"
+            f"🌿 Branch: `{branch}`\n\n"
+            f"Use the buttons below to update or view changes.",
+            buttons=buttons,
         )
         Link = m.message_link
         await ulttext.edit(
-            f'**Update available!**\n\nView changelog and update from your log channel.\n\n[View Changelog]({Link})',
+            f'**🆕 Update available!**\n\n'
+            f'📦 Repository: `{repo_url.replace(".git", "")}`\n'
+            f'🌿 Branch: `{branch}`\n\n'
+            f'[📋 View Options & Update]({Link})',
             parse_mode="md",
             link_preview=False,
         )
     else:
         await ulttext.edit(
-            f'<code>Your BOT is </code><strong>up-to-date</strong><code> with </code><strong><a href="{repo_url.replace(".git", "")}/tree/{branch}">[{branch}]</a></strong>.',
-            parse_mode="html",
+            f'✅ **Your bot is up-to-date!**\n\n'
+            f'📦 Repository: `{repo_url.replace(".git", "")}`\n'
+            f'🌿 Branch: `{branch}`',
+            parse_mode="md",
             link_preview=False,
         )
 
@@ -469,23 +504,56 @@ Note: Use `{tr}setrepo <your_fork_url>` to update from your own fork."""
 @callback(re.compile(b"update_now\\|(.*)"))
 async def update_now_callback(event):
     repo_url = event.data_match.group(1).decode("utf-8")
-    await event.edit("`Updating now...`")
+    await event.edit(
+        "🔄 **Starting update process...**\n\n"
+        f"📦 Repository: `{repo_url}`\n"
+        "⚡ Using external script for reliable update\n\n"
+        "🤖 Bot will shutdown and restart automatically after update completes."
+    )
+    
+    # Wait a moment for the message to be sent
+    await asyncio.sleep(2)
+    
+    # Launch external update script and shutdown
+    launch_update_script(repo_url)
+
+
+@callback(re.compile(b"update_changelog\\|(.*)"))
+async def update_changelog_callback(event):
+    repo_url = event.data_match.group(1).decode("utf-8")
+    
+    # Get changelog
     try:
         repo = Repo()
         branch = repo.active_branch.name
-        await bash(f"git config remote.upstream.url {repo_url} || git remote add upstream {repo_url}")
-        await bash(f"git pull -f upstream {branch}")
-        await bash("pip3 install -r requirements.txt --break-system-packages")
-        call_back()
-        await event.edit("`Update successful! Restarting...`")
-        os.execl(sys.executable, sys.executable, "-m", "pyUltroid")
-    except Exception as e:
-        await event.edit(f"**Update failed!**\n\n**Error:**\n`{e}`")
-    finally:
+        
+        # Set up upstream remote
         try:
-            repo.delete_remote("upstream")
-        except Exception:
-            pass
+            upstream_remote = repo.remote("upstream")
+            upstream_remote.set_url(repo_url)
+        except ValueError:
+            upstream_remote = repo.create_remote("upstream", repo_url)
+        
+        # Fetch updates
+        upstream_remote.fetch(branch)
+        
+        # Generate changelog
+        changelog = f"**📋 Changelog for [{branch}]({repo_url.replace('.git', '')}/tree/{branch})**\n\n"
+        for commit in repo.iter_commits(f'{branch}..upstream/{branch}'):
+            changelog += f"• `{commit.summary}` by __{commit.author.name}__\n"
+        
+        # Cleanup
+        repo.delete_remote("upstream")
+        
+        await event.edit(
+            changelog,
+            buttons=[
+                [Button.inline("🔄 Update Now", data=f"update_now|{repo_url}")],
+                [Button.inline("❌ Close", data="close_update")],
+            ],
+        )
+    except Exception as e:
+        await event.edit(f"**Error getting changelog:**\n`{e}`")
 
 
 @callback("close_update")
