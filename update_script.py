@@ -37,7 +37,7 @@ def backup_important_files():
     for file in important_files:
         if os.path.exists(file):
             backup_name = f"{file}.backup"
-            if run_command(f'copy "{file}" "{backup_name}"'):
+            if run_command(f'cp "{file}" "{backup_name}"'):
                 backed_up.append((file, backup_name))
                 print(f"✅ Backed up {file}")
     
@@ -47,17 +47,17 @@ def restore_important_files(backed_up):
     """Restore important configuration files."""
     for original, backup in backed_up:
         if os.path.exists(backup):
-            if run_command(f'copy "{backup}" "{original}"'):
+            if run_command(f'cp "{backup}" "{original}"'):
                 print(f"✅ Restored {original}")
-                run_command(f'del "{backup}"')
+                run_command(f'rm "{backup}"')
 
 def clean_repository():
     """Clean the repository of cache files and reset to clean state."""
     print("🧹 Cleaning repository...")
     
-    # Remove Python cache files
-    run_command('for /r . %i in (*.pyc) do @del "%i" >nul 2>&1')
-    run_command('for /d /r . %d in (__pycache__) do @if exist "%d" rd /s /q "%d" >nul 2>&1')
+    # Remove Python cache files (Linux/Ubuntu commands)
+    run_command('find . -name "*.pyc" -delete')
+    run_command('find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true')
     
     # Reset all tracked files to their HEAD state
     run_command("git reset --hard HEAD")
@@ -143,31 +143,75 @@ def restart_bot():
     elif os.path.exists("venv/Scripts/python.exe"):
         venv_python = "venv/Scripts/python.exe"
     
+    # Create a restart log
+    with open("update_restart.log", "w") as f:
+        f.write(f"Update completed at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"Attempting restart...\n")
+    
     # Determine how to start the bot
-    if len(sys.argv) > 1 and sys.argv[-1] == "main.py":
-        # Started with main.py
-        if venv_python:
-            os.execv(venv_python, [venv_python, "main.py"])
+    try:
+        if len(sys.argv) > 1 and sys.argv[-1] == "main.py":
+            # Started with main.py
+            if venv_python:
+                print(f"🚀 Restarting with: {venv_python} main.py")
+                os.execv(venv_python, [venv_python, "main.py"])
+            else:
+                print(f"🚀 Restarting with: {sys.executable} main.py")
+                os.execv(sys.executable, [sys.executable, "main.py"])
         else:
-            os.execv(sys.executable, [sys.executable, "main.py"])
-    else:
-        # Started as module
-        if venv_python:
-            os.execv(venv_python, [venv_python, "-m", "pyUltroid"])
-        else:
-            os.execv(sys.executable, [sys.executable, "-m", "pyUltroid"])
+            # Started as module
+            if venv_python:
+                print(f"🚀 Restarting with: {venv_python} -m pyUltroid")
+                os.execv(venv_python, [venv_python, "-m", "pyUltroid"])
+            else:
+                print(f"🚀 Restarting with: {sys.executable} -m pyUltroid")
+                os.execv(sys.executable, [sys.executable, "-m", "pyUltroid"])
+    except Exception as e:
+        print(f"❌ Failed to restart bot: {e}")
+        with open("update_restart.log", "a") as f:
+            f.write(f"Restart failed: {e}\n")
+        
+        # Try alternative restart methods
+        print("🔄 Trying alternative restart method...")
+        try:
+            if venv_python:
+                subprocess.Popen([venv_python, "-m", "pyUltroid"])
+            else:
+                subprocess.Popen([sys.executable, "-m", "pyUltroid"])
+            print("✅ Bot restart initiated with subprocess")
+        except Exception as e2:
+            print(f"❌ Alternative restart also failed: {e2}")
+            with open("update_restart.log", "a") as f:
+                f.write(f"Alternative restart failed: {e2}\n")
+                f.write("Please manually restart the bot\n")
 
 if __name__ == "__main__":
-    print("🚀 Ultroid Update Script - Improved Version")
+    print("🚀 Ultroid Update Script - Ubuntu/Linux Version")
     print("=" * 50)
     
+    # Create update log
+    log_file = "update_process.log"
+    with open(log_file, "w") as f:
+        f.write(f"Update started at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+    
     # Wait a moment for the bot to fully shutdown
-    time.sleep(2)
+    print("⏳ Waiting for bot shutdown...")
+    time.sleep(3)
     
     # Perform update
-    if main():
-        print("=" * 50)
-        restart_bot()
-    else:
-        print("❌ Update failed. Please check the errors above.")
+    try:
+        if main():
+            print("=" * 50)
+            with open(log_file, "a") as f:
+                f.write(f"Update successful at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            restart_bot()
+        else:
+            print("❌ Update failed. Please check the errors above.")
+            with open(log_file, "a") as f:
+                f.write(f"Update failed at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            sys.exit(1)
+    except Exception as e:
+        print(f"❌ Critical error during update: {e}")
+        with open(log_file, "a") as f:
+            f.write(f"Critical error: {e}\n")
         sys.exit(1)
