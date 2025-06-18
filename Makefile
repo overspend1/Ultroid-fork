@@ -1,33 +1,109 @@
-# Makefile for Ultroid testing and development
+# Ultroid Docker Makefile
+# Easy management commands for Docker deployment
 
-.PHONY: help test test-core test-plugins test-database test-updates test-all coverage install-test-deps clean lint format check
+.PHONY: help build start stop restart logs shell clean update backup session deploy status stats health
 
 # Default target
 help:
-	@echo "🧪 Ultroid Development Commands"
-	@echo "==============================="
+	@echo "🐳 Ultroid Docker Management"
+	@echo "============================="
 	@echo ""
-	@echo "Testing:"
-	@echo "  test-deps     Install test dependencies"
-	@echo "  test          Run all tests"
-	@echo "  test-core     Run core functionality tests"
-	@echo "  test-plugins  Run plugin tests"
-	@echo "  test-database Run database tests"
-	@echo "  test-updates  Run update system tests"
-	@echo "  coverage      Run tests with coverage report"
+	@echo "📋 Available commands:"
+	@echo "  make build     - Build Docker images"
+	@echo "  make start     - Start all services"
+	@echo "  make stop      - Stop all services"
+	@echo "  make restart   - Restart Ultroid bot"
+	@echo "  make logs      - View bot logs"
+	@echo "  make shell     - Access bot shell"
+	@echo "  make clean     - Clean up containers"
+	@echo "  make update    - Update and restart"
+	@echo "  make backup    - Backup database"
+	@echo "  make session   - Generate session string"
+	@echo "  make deploy    - Full deployment"
 	@echo ""
-	@echo "Code Quality:"
-	@echo "  lint          Run linting checks"
-	@echo "  format        Format code with black"
-	@echo "  check         Run all quality checks"
-	@echo ""
-	@echo "Utilities:"
-	@echo "  clean         Clean temporary files"
-	@echo "  install       Install bot dependencies"
+	@echo "🔍 Status commands:"
+	@echo "  make status    - Show service status"
+	@echo "  make stats     - Show resource usage"
+	@echo "  make health    - Health check"
 
-# Install test dependencies
-test-deps:
-	@echo "📦 Installing test dependencies..."
+# Build Docker images
+build:
+	@echo "🔨 Building Ultroid Docker image..."
+	docker-compose build
+
+# Start all services
+start:
+	@echo "🚀 Starting Ultroid services..."
+	docker-compose up -d
+
+# Stop all services
+stop:
+	@echo "⏹️ Stopping Ultroid services..."
+	docker-compose down
+
+# Restart Ultroid bot
+restart:
+	@echo "🔄 Restarting Ultroid bot..."
+	docker-compose restart ultroid
+
+# View logs
+logs:
+	@echo "📝 Showing Ultroid logs..."
+	docker-compose logs -f ultroid
+
+# Access shell
+shell:
+	@echo "🐚 Accessing Ultroid shell..."
+	docker-compose exec ultroid bash
+
+# Clean up
+clean:
+	@echo "🧹 Cleaning up containers and images..."
+	docker-compose down --rmi all --volumes --remove-orphans
+
+# Update and restart
+update:
+	@echo "⬆️ Updating Ultroid..."
+	git pull
+	docker-compose build
+	docker-compose up -d
+
+# Backup database
+backup:
+	@echo "💾 Backing up database..."
+	mkdir -p backups
+	docker-compose exec redis redis-cli BGSAVE
+	docker cp ultroid-redis:/data/dump.rdb backups/redis-backup-$(shell date +%Y%m%d-%H%M%S).rdb
+	@echo "✅ Backup completed in backups/ directory"
+
+# Generate session string
+session:
+	@echo "🔑 Generating session string..."
+	./generate-session.sh
+
+# Full deployment
+deploy:
+	@echo "🚀 Starting full deployment..."
+	./docker-deploy.sh
+
+# Service status
+status:
+	@echo "📊 Service status:"
+	docker-compose ps
+
+# Resource stats
+stats:
+	@echo "� Resource usage:"
+	docker stats --no-stream
+
+# Health check
+health:
+	@echo "🔍 Health check:"
+	@echo "Services:"
+	@docker-compose ps
+	@echo ""
+	@echo "Ultroid status:"
+	@docker-compose logs --tail=5 ultroid
 	python3 run_tests.py --install-deps
 
 # Install bot dependencies

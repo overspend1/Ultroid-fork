@@ -1,14 +1,94 @@
+version: '3.8'
+
 services:
-  worker:
-    build: .
+  # Redis Database Service
+  redis:
+    image: redis:7-alpine
+    container_name: ultroid-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
     environment:
-      REDIS_URI: $REDIS_URI
-      REDIS_PASSWORD: $REDIS_PASSWORD
-      SESSION: $SESSION
-      API_ID: $API_ID  # defaults to None
-      API_HASH: $API_HASH  # defaults to None
-      MONGO_URI: $MONGO_URI  # defaults to None
-      BOT_TOKEN: $BOT_TOKEN # Not mandatory
-      LOG_CHANNEL: $LOG_CHANNEL # Not mandatory
-      DATABASE_URL: $DATABASE_URL  # defaults to None
-      OKTETO_TOKEN: $OKTETO_TOKEN
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-ultroid123}
+    command: redis-server --requirepass ${REDIS_PASSWORD:-ultroid123}
+    networks:
+      - ultroid-network
+
+  # MongoDB Database Service (Alternative to Redis)
+  mongodb:
+    image: mongo:6
+    container_name: ultroid-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER:-ultroid}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-ultroid123}
+    networks:
+      - ultroid-network
+
+  # Ultroid Bot Service
+  ultroid:
+    build: .
+    container_name: ultroid-bot
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - ./downloads:/root/TeamUltroid/downloads
+      - ./uploads:/root/TeamUltroid/uploads
+      - ./logs:/root/TeamUltroid/logs
+      - ./resources/session:/root/TeamUltroid/resources/session
+      - ./.env:/root/TeamUltroid/.env
+      - ./credentials.json:/root/TeamUltroid/credentials.json:ro
+    environment:
+      # Database Configuration (Redis)
+      - REDIS_URI=redis://redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-ultroid123}
+      
+      # Alternative MongoDB Configuration
+      # - MONGO_URI=mongodb://${MONGO_USER:-ultroid}:${MONGO_PASSWORD:-ultroid123}@mongodb:27017/ultroid?authSource=admin
+      
+      # Bot Configuration
+      - SESSION=${SESSION}
+      - API_ID=${API_ID}
+      - API_HASH=${API_HASH}
+      - BOT_TOKEN=${BOT_TOKEN}
+      - OWNER_ID=${OWNER_ID}
+      
+      # Optional Configuration
+      - HEROKU_API_KEY=${HEROKU_API_KEY}
+      - HEROKU_APP_NAME=${HEROKU_APP_NAME}
+      - LOG_CHANNEL=${LOG_CHANNEL}
+      - BOT_MODE=${BOT_MODE}
+      - DUAL_MODE=${DUAL_MODE}
+      - DATABASE_URL=${DATABASE_URL}
+      - OKTETO_TOKEN=${OKTETO_TOKEN}
+      
+      # Custom Configuration
+      - TZ=Asia/Kolkata
+    networks:
+      - ultroid-network
+
+  # Session Generator Service (One-time use)
+  session-gen:
+    build: .
+    container_name: ultroid-session-gen
+    profiles: ["session"]
+    volumes:
+      - ./session_output:/root/TeamUltroid/session_output
+    command: bash -c "wget -O session.py https://git.io/JY9JI && python3 session.py"
+    networks:
+      - ultroid-network
+
+volumes:
+  redis_data:
+  mongo_data:
+
+networks:
+  ultroid-network:
+    driver: bridge

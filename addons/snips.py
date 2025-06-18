@@ -66,18 +66,17 @@ async def an(e):
     if not (wt and wrd):
         return await e.eor(get_string("snip_1"))
     if "$" in wrd:
-        wrd = wrd.replace("$", "")
-    btn = format_btn(wt.buttons) if wt.buttons else None
+        wrd = wrd.replace("$", "")    btn = format_btn(wt.buttons) if wt.buttons else None
     if wt and wt.media:
-    wut = mediainfo(wt.media)
-    if wut.startswith(("pic", "gif")):
-        dl = await wt.download_media()
-        m = upload_file(dl)
-        os.remove(dl)
-    elif wut == "video":
-        if wt.media.document.size > 8 * 1000 * 1000:
-            return await e.eor(get_string("com_4"), time=5)
-        dl = await wt.download_media()
+        wut = mediainfo(wt.media)
+        if wut.startswith(("pic", "gif")):
+            dl = await wt.download_media()
+            m = upload_file(dl)
+            os.remove(dl)
+        elif wut == "video":
+            if wt.media.document.size > 8 * 1000 * 1000:
+                return await e.eor(get_string("com_4"), time=5)
+            dl = await wt.download_media()
         m = upload_file(dl)
         os.remove(dl)
     else:
