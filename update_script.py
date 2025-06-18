@@ -177,17 +177,46 @@ def restart_bot():
             f.write("Please set up your bot configuration before restart\n")
         return
     
+    # Create a restart log
+    with open("update_restart.log", "w") as f:
+        f.write(f"Update completed at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"Attempting restart using startup script...\n")
+    
+    # Use the startup script for restarting (preferred method)
+    if os.path.exists("startup"):
+        try:
+            print("🚀 Restarting with startup script: ./startup")
+            # Make sure startup script is executable
+            run_command("chmod +x startup")
+            # Use exec to replace the current process with the startup script
+            os.execv("/bin/bash", ["bash", "./startup"])
+        except Exception as e:
+            print(f"❌ Failed to restart with startup script: {e}")
+            with open("update_restart.log", "a") as f:
+                f.write(f"Startup script restart failed: {e}\n")
+        
+        # Fallback: try subprocess method
+        try:
+            print("🔄 Trying startup script with subprocess...")
+            subprocess.Popen(["bash", "./startup"])
+            print("✅ Bot restart initiated with startup script (subprocess)")
+            with open("update_restart.log", "a") as f:
+                f.write("Restart successful with startup script (subprocess)\n")
+            return
+        except Exception as e2:
+            print(f"❌ Startup script subprocess also failed: {e2}")
+            with open("update_restart.log", "a") as f:
+                f.write(f"Startup script subprocess failed: {e2}\n")
+    
+    # Fallback to original Python method if startup script fails
+    print("🔄 Falling back to Python restart method...")
+    
     # Check if we have a virtual environment
     venv_python = None
     if os.path.exists("venv/bin/python"):
         venv_python = "venv/bin/python"
     elif os.path.exists("venv/Scripts/python.exe"):
         venv_python = "venv/Scripts/python.exe"
-    
-    # Create a restart log
-    with open("update_restart.log", "w") as f:
-        f.write(f"Update completed at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-        f.write(f"Attempting restart...\n")
     
     # Determine how to start the bot
     try:
@@ -208,23 +237,12 @@ def restart_bot():
                 print(f"🚀 Restarting with: {sys.executable} -m pyUltroid")
                 os.execv(sys.executable, [sys.executable, "-m", "pyUltroid"])
     except Exception as e:
-        print(f"❌ Failed to restart bot: {e}")
+        print(f"❌ Python restart method also failed: {e}")
         with open("update_restart.log", "a") as f:
-            f.write(f"Restart failed: {e}\n")
+            f.write(f"Python restart failed: {e}\n")
+            f.write("All restart methods failed. Please manually restart the bot using: ./startup\n")
         
-        # Try alternative restart methods
-        print("🔄 Trying alternative restart method...")
-        try:
-            if venv_python:
-                subprocess.Popen([venv_python, "-m", "pyUltroid"])
-            else:
-                subprocess.Popen([sys.executable, "-m", "pyUltroid"])
-            print("✅ Bot restart initiated with subprocess")
-        except Exception as e2:
-            print(f"❌ Alternative restart also failed: {e2}")
-            with open("update_restart.log", "a") as f:
-                f.write(f"Alternative restart failed: {e2}\n")
-                f.write("Please manually restart the bot\n")
+        print("💡 Please manually restart the bot using: ./startup")
 
 if __name__ == "__main__":
     print("🚀 Ultroid Update Script - Ubuntu/Linux Version")
