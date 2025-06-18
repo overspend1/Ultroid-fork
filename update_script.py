@@ -132,9 +132,50 @@ def main():
     print("✅ Update completed successfully!")
     return True
 
+def validate_config():
+    """Check if essential config is available before restart."""
+    config_issues = []
+    
+    # Check for essential environment variables
+    essential_vars = ['API_ID', 'API_HASH', 'SESSION']
+    
+    # Check .env file
+    if os.path.exists('.env'):
+        with open('.env', 'r') as f:
+            env_content = f.read()
+            for var in essential_vars:
+                if f"{var}=" not in env_content or f"{var}=" in env_content and env_content.split(f"{var}=")[1].split('\n')[0].strip() == "":
+                    config_issues.append(f"{var} not set or empty in .env")
+    else:
+        # Check config.py
+        if os.path.exists('config.py'):
+            with open('config.py', 'r') as f:
+                config_content = f.read()
+                for var in essential_vars:
+                    if var not in config_content:
+                        config_issues.append(f"{var} not found in config.py")
+        else:
+            config_issues.append("No .env or config.py file found")
+    
+    return config_issues
+
 def restart_bot():
     """Restart the bot after update."""
     print("🔄 Restarting Ultroid...")
+    
+    # Validate configuration first
+    config_issues = validate_config()
+    if config_issues:
+        print("⚠️ Configuration issues detected:")
+        for issue in config_issues:
+            print(f"   - {issue}")
+        print("❌ Cannot restart bot without proper configuration")
+        with open("update_restart.log", "w") as f:
+            f.write(f"Restart failed due to config issues at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            for issue in config_issues:
+                f.write(f"Config issue: {issue}\n")
+            f.write("Please set up your bot configuration before restart\n")
+        return
     
     # Check if we have a virtual environment
     venv_python = None
