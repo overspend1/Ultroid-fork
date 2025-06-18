@@ -34,7 +34,7 @@ from telethon.tl.types import ChannelParticipantCreator as owner
 from telethon.tl.types import UserStatusOffline as off
 from telethon.tl.types import UserStatusOnline as onn
 from telethon.tl.types import UserStatusRecently as rec
-from pyUltroid import ultroid_cmd
+from pyUltroid._misc._decorators import ultroid_cmd
 from pyUltroid.fns.helper import inline_mention
 
 

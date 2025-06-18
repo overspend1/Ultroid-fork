@@ -13,7 +13,7 @@ from pyUltroid import asst, ultroid_bot
 from pyUltroid.config import LOG_CHANNEL, NOSPAM_CHAT
 from pyUltroid.db.afk_db import add_afk, del_afk, is_afk
 from pyUltroid.db.base import KeyManager
-from pyUltroid.fns.decorators import ultroid_cmd
+from pyUltroid._misc._decorators import ultroid_cmd
 from pyUltroid.fns.helper import get_help, get_string
 from pyUltroid.fns.tools import mediainfo, upload_file
 from pyUltroid.udB import udB
