@@ -429,10 +429,10 @@ Note: Use `{tr}setrepo <your_fork_url>` to update from your own fork."""
     is_original = "original" in args
 
     repo_url = (
-        "https://github.com/ThePrateekBhatia/Ultroid"
+        "https://github.com/ThePrateekBhatia/Ultroid.git"
         if is_original
         else udB.get_key("UPSTREAM_REPO")
-        or "https://github.com/ThePrateekBhatia/Ultroid"
+        or "https://github.com/overspend1/Ultroid-fork.git"
     )
 
     if is_now:

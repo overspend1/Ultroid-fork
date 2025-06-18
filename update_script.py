@@ -36,10 +36,9 @@ def main():
     # Check if we're in a git repository
     if not (script_dir / ".git").exists():
         print("❌ Not a git repository. Cannot update.")
-        return False
-    
-    # Get the repository URL from command line args or database
-    repo_url = sys.argv[1] if len(sys.argv) > 1 else None
+        return False    
+    # Get the repository URL from command line args or default to user's fork
+    repo_url = sys.argv[1] if len(sys.argv) > 1 else "https://github.com/overspend1/Ultroid-fork.git"
     
     # Fetch and pull updates
     print("📥 Fetching updates from repository...")

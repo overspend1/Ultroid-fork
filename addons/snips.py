@@ -21,14 +21,14 @@
 """
 import os
 
-from . import upload_file as uf
+from telethon import events
 from telethon.utils import pack_bot_file_id
 
+from pyUltroid import get_string, udB, ultroid_bot
 from pyUltroid._misc import sudoers
-from pyUltroid.fns.tools import create_tl_btn, format_btn, get_msg_button
-
-from . import events, get_string, mediainfo, udB, ultroid_bot, ultroid_cmd
-from ._inline import something
+from pyUltroid.fns.decorators import ultroid_cmd
+from pyUltroid.fns.helper import mediainfo
+from pyUltroid.fns.tools import create_tl_btn, format_btn, get_msg_button, upload_file
 
 # Functions moved from snips_db.py
 def get_all_snips():
@@ -69,19 +69,19 @@ async def an(e):
         wrd = wrd.replace("$", "")
     btn = format_btn(wt.buttons) if wt.buttons else None
     if wt and wt.media:
-        wut = mediainfo(wt.media)
-        if wut.startswith(("pic", "gif")):
-            dl = await wt.download_media()
-            m = uf(dl)
-            os.remove(dl)
-        elif wut == "video":
-            if wt.media.document.size > 8 * 1000 * 1000:
-                return await e.eor(get_string("com_4"), time=5)
-            dl = await wt.download_media()
-            m = uf(dl)
-            os.remove(dl)
-        else:
-            m = pack_bot_file_id(wt.media)
+    wut = mediainfo(wt.media)
+    if wut.startswith(("pic", "gif")):
+        dl = await wt.download_media()
+        m = upload_file(dl)
+        os.remove(dl)
+    elif wut == "video":
+        if wt.media.document.size > 8 * 1000 * 1000:
+            return await e.eor(get_string("com_4"), time=5)
+        dl = await wt.download_media()
+        m = upload_file(dl)
+        os.remove(dl)
+    else:
+        m = pack_bot_file_id(wt.media)
         if wt.text:
             txt = wt.text
             if not btn:
