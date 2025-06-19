@@ -90,10 +90,10 @@ def load_addons(plugin_name):
         update_cmd = HELP["Addons"]
         try:
             update_cmd.update({base_name: doc})
-        except BaseException:
+        except Exception: # Changed from BaseException
             pass
     else:
         try:
             HELP.update({"Addons": {base_name: doc}})
-        except BaseException as em:
+        except Exception: # Changed from BaseException, removed unused 'em'
             pass

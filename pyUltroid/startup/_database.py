@@ -50,7 +50,7 @@ else:
 
 
 class _BaseDatabase:
-    def __init__(self, *args, **kwargs):
+    def __init__(self): # Removed *args, **kwargs as they are not used by super() calls in subclasses
         self._cache = {}
 
     def get_key(self, key):
@@ -78,28 +78,28 @@ class _BaseDatabase:
     def del_key(self, key):
         if key in self._cache:
             del self._cache[key]
-        self.delete(key)
+        self.delete(str(key)) # pylint: disable=no-member # Implemented in subclasses
         return True
 
     def _get_data(self, key=None, data=None):
         if key:
-            data = self.get(str(key))
+            data = self.get(str(key)) # pylint: disable=no-member # Implemented in subclasses
         if data and isinstance(data, str):
             try:
                 data = ast.literal_eval(data)
-            except BaseException:
-                pass
+            except (ValueError, SyntaxError, TypeError): # More specific exceptions for literal_eval
+                pass # Keep data as string if eval fails
         return data
 
     def set_key(self, key, value, cache_only=False):
-        value = self._get_data(data=value)
+        value = self._get_data(data=value) # Process value first
         self._cache[key] = value
         if cache_only:
-            return
-        return self.set(str(key), str(value))
+            return True # Return True for consistency
+        return self.set(str(key), str(value)) # pylint: disable=no-member # Implemented in subclasses
 
     def rename(self, key1, key2):
-        _ = self.get_key(key1)
+        _ = self.get_key(key1) # Relies on get_key which uses self.get
         if _:
             self.del_key(key1)
             self.set_key(key2, _)
@@ -171,9 +171,9 @@ class SqlDB(_BaseDatabase):
             self._cursor.execute(
                 "CREATE TABLE IF NOT EXISTS Ultroid (ultroidCli varchar(70))"
             )
-        except Exception as error:
-            LOGS.exception(error)
-            LOGS.info("Invaid SQL Database")
+        except psycopg2.Error as error: # Use specific psycopg2 base error
+            LOGS.error("SQL Database connection error: %s", error, exc_info=True)
+            LOGS.info("Invalid SQL Database configuration.")
             if self._connection:
                 self._connection.close()
             sys.exit()
@@ -200,8 +200,8 @@ class SqlDB(_BaseDatabase):
 
     def get(self, variable):
         try:
-            self._cursor.execute(f"SELECT {variable} FROM Ultroid")
-        except psycopg2.errors.UndefinedColumn:
+            self._cursor.execute(f"SELECT {variable} FROM Ultroid") # Ensure variable is sanitized if it comes from user input
+        except psycopg2.errors.UndefinedColumn: # pylint: disable=no-member
             return None
         data = self._cursor.fetchall()
         if not data:
@@ -213,11 +213,19 @@ class SqlDB(_BaseDatabase):
 
     def set(self, key, value):
         try:
+            # Check if column exists before trying to drop, to avoid error if it doesn't
             self._cursor.execute(f"ALTER TABLE Ultroid DROP COLUMN IF EXISTS {key}")
-        except (psycopg2.errors.UndefinedColumn, psycopg2.errors.SyntaxError):
+        except psycopg2.errors.UndefinedColumn: # pylint: disable=no-member
+            # Column doesn't exist, which is fine for ensuring it's dropped.
             pass
-        except BaseException as er:
-            LOGS.exception(er)
+        except psycopg2.Error as er: # Catch specific psycopg2 errors
+            LOGS.error("Error dropping column %s: %s", key, er, exc_info=True)
+            # Depending on policy, may want to return False or raise
+        # except psycopg2.errors.SyntaxError: # pylint: disable=no-member
+        #     # This might indicate an issue with the key name (e.g. SQL injection if not careful)
+        #     LOGS.error("Syntax error while trying to drop column %s.", key, exc_info=True)
+        #     pass
+
         self._cache.update({key: value})
         self._cursor.execute(f"ALTER TABLE Ultroid ADD {key} TEXT")
         self._cursor.execute(f"INSERT INTO Ultroid ({key}) values (%s)", (str(value),))
@@ -226,7 +234,10 @@ class SqlDB(_BaseDatabase):
     def delete(self, key):
         try:
             self._cursor.execute(f"ALTER TABLE Ultroid DROP COLUMN {key}")
-        except psycopg2.errors.UndefinedColumn:
+        except psycopg2.errors.UndefinedColumn: # pylint: disable=no-member
+            return False # Column didn't exist
+        except psycopg2.Error as e_drop: # Other SQL errors
+            LOGS.error("Error dropping column %s during delete: %s", key, e_drop)
             return False
         return True
 
@@ -248,42 +259,68 @@ class RedisDB(_BaseDatabase):
         host,
         port,
         password,
+        *args, # Moved *args before keyword-only arguments
         platform="",
         logger=LOGS,
-        *args,
         **kwargs,
     ):
-        if host and ":" in host:
-            spli_ = host.split(":")
-            host = spli_[0]
-            port = int(spli_[-1])
-            if host.startswith("http"):
-                logger.error("Your REDIS_URI should not start with http !")
-                import sys
+        effective_host = host
+        effective_port = port
+        effective_password = password
 
-                sys.exit()
-        elif not host or not port:
-            logger.error("Port Number not found")
-            import sys
+        if effective_host and ":" in effective_host:
+            spli_ = effective_host.split(":")
+            effective_host = spli_[0]
+            try:
+                effective_port = int(spli_[-1])
+            except ValueError:
+                logger.error("Invalid port in REDIS_URI: %s", spli_[-1])
+                sys.exit(1)
 
-            sys.exit()
-        kwargs["host"] = host
-        kwargs["password"] = password
-        kwargs["port"] = port
+            if effective_host.startswith("http"): # http(s) scheme is not for direct Redis connection string
+                logger.error("Your REDIS_URI (host part) should not start with http(s)://. Use only hostname/IP.")
+                sys.exit(1)
+        elif not effective_host or not effective_port: # Port might be part of URI or separate
+             # If REDIS_URI is `redis://user:pass@host:port` then host, port, password are parsed by redis-py itself if full URI is passed.
+             # This logic seems to be for when they are passed as separate Var components.
+            pass # Allow redis-py to handle it if full URI is passed to Redis() later
 
-        if platform.lower() == "qovery" and not host:
-            var, hash_, host, password = "", "", "", ""
-            for vars_ in os.environ:
-                if vars_.startswith("QOVERY_REDIS_") and vars.endswith("_HOST"):
-                    var = vars_
-            if var:
-                hash_ = var.split("_", maxsplit=2)[1].split("_")[0]
-            if hash:
-                kwargs["host"] = os.environ.get(f"QOVERY_REDIS_{hash_}_HOST")
-                kwargs["port"] = os.environ.get(f"QOVERY_REDIS_{hash_}_PORT")
-                kwargs["password"] = os.environ.get(f"QOVERY_REDIS_{hash_}_PASSWORD")
-        self.db = Redis(**kwargs)
-        self.set = self.db.set
+        # Qovery specific logic
+        # The `and not host` condition in original code for Qovery block seems problematic if host was already parsed from REDIS_URI.
+        # This block should ideally run if platform is qovery AND specific Qovery ENV vars are present, potentially overriding others.
+        if platform.lower() == "qovery": # Simpler condition: if on Qovery, try to use Qovery vars.
+            qovery_redis_host = None
+            qovery_hash = ""
+            for var_name in os.environ:
+                if var_name.startswith("QOVERY_REDIS_") and var_name.endswith("_HOST"):
+                    qovery_hash = var_name.split("_", maxsplit=2)[1].split("_")[0] # Extract HASH part
+                    qovery_redis_host = os.environ.get(var_name)
+                    break # Found one, assume it's the one to use
+
+            if qovery_redis_host and qovery_hash:
+                logger.info("Qovery environment detected, using Qovery Redis ENV vars.")
+                effective_host = qovery_redis_host
+                effective_port = int(os.environ.get(f"QOVERY_REDIS_{qovery_hash}_PORT", effective_port)) # Keep original if not found
+                effective_password = os.environ.get(f"QOVERY_REDIS_{qovery_hash}_PASSWORD", effective_password)
+            # Removed `if True:` block as it was unconditional. Logic now driven by qovery_redis_host and qovery_hash.
+
+        # Construct connection_kwargs for Redis
+        connection_kwargs = kwargs # Start with user-passed kwargs
+        if effective_host: # Only override if we have a host (from Var or Qovery)
+            connection_kwargs["host"] = effective_host
+        if effective_port:
+            connection_kwargs["port"] = int(effective_port) # Ensure port is int
+        if effective_password: # Only override if we have a password
+            connection_kwargs["password"] = effective_password
+
+        # If Var.REDIS_URI is a full URI string, redis-py can parse it directly.
+        # This logic assumes separate host/port/pass might be primary, or Qovery overrides.
+        # If Var.REDIS_URI is the primary source and is a full URI, this might be simpler.
+        # For now, respecting the structure that seems to prioritize individual components or Qovery.
+
+        self.db = Redis(**connection_kwargs) # Pass all collected kwargs
+        # Alias methods
+        self.set = self.db.set # type: ignore
         self.get = self.db.get
         self.keys = self.db.keys
         self.delete = self.db.delete
@@ -344,9 +381,12 @@ def UltroidDB():
                 "No DB requirement fullfilled!\nPlease install redis, mongo or sql dependencies...\nTill then using local file as database."
             )
             return LocalDB()
-    except BaseException as err:
-        LOGS.exception(err)
-    exit()
+    except Exception as err: # Changed from BaseException
+        LOGS.error("Failed to initialize database: %s", err, exc_info=True)
+    # exit() here is problematic as it will stop the bot if any DB init fails.
+    # Consider returning None or raising a specific custom error to be handled by main.
+    # For now, keeping original exit() behavior.
+    sys.exit("Database initialization failed.")
 
 
 # --------------------------------------------------------------------------------------------- #

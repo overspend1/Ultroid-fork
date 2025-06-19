@@ -126,6 +126,7 @@ BOT_TOKEN=          # Assistant bot
 LOG_CHANNEL=        # Logging channel
 OWNER_ID=           # Your user ID
 HEROKU_API_KEY=     # For updates
+TZ=Asia/Kolkata     # Set your desired timezone (e.g., Europe/London, America/New_York)
 ```
 
 ## 🎮 Management Commands
@@ -150,7 +151,7 @@ docker-compose up -d                    # Start
 docker-compose down                     # Stop
 docker-compose logs -f ultroid          # Logs
 docker-compose restart ultroid          # Restart
-docker-compose exec ultroid bash        # Shell
+docker-compose exec ultroid bash        # Shell (Note: Container runs as 'ultroid' user, WORKDIR is /home/ultroid/app)
 ```
 
 ## 🔍 Monitoring & Troubleshooting
@@ -243,10 +244,11 @@ docker-compose restart redis
 
 ### Volume Mounts
 ```
-./downloads     → Bot downloads
-./uploads       → Bot uploads  
-./logs          → Application logs
-./resources     → Bot resources
+./downloads     → /home/ultroid/app/downloads
+./uploads       → /home/ultroid/app/uploads
+./logs          → /home/ultroid/app/logs
+./resources     → /home/ultroid/app/resources
+# .env and credentials.json are also mounted into /home/ultroid/app/
 ```
 
 ## 🆚 Comparison with Other Methods

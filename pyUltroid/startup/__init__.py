@@ -87,10 +87,10 @@ if run_as_module:
     """
     )
 
-    LOGS.info(f"Python version - {platform.python_version()}")
-    LOGS.info(f"py-Ultroid Version - {__pyUltroid__}")
-    LOGS.info(f"Telethon Version - {__version__} [Layer: {LAYER}]")
-    LOGS.info(f"Ultroid Version - {ultroid_version} [{HOSTED_ON}]")
+    LOGS.info("Python version - %s", platform.python_version())
+    LOGS.info("py-Ultroid Version - %s", __pyUltroid__)
+    LOGS.info("Telethon Version - %s [Layer: %s]", __version__, LAYER)
+    LOGS.info("Ultroid Version - %s [%s]", ultroid_version, HOSTED_ON)
 
     try:
         from safety.tools import *

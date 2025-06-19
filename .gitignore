@@ -45,3 +45,21 @@ bin-release/
 
 # fly.io configs
 fly.toml
+
+# User-specific data and logs
+downloads/
+uploads/
+logs/
+
+# Docker-specific generated directory for safe setup
+docker-ultroid/
+
+# Session generator output
+session_output/
+
+# Python cache files
+*.py[co]
+
+# OS-specific files
+.DS_Store
+Thumbs.db
