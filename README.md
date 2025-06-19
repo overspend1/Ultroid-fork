@@ -28,15 +28,15 @@ The easiest way to set up Ultroid is by using our unified setup script.
 
 **Run this command in your terminal:**
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/TeamUltroid/Ultroid/main/ultroid_setup.sh)
+bash <(curl -s https://raw.githubusercontent.com/overspend1/Ultroid-fork/main/ultroid_setup.sh)
 ```
-Or, clone the repository and run the script:
+Or, clone this repository and run the script:
 ```bash
-git clone https://github.com/TeamUltroid/Ultroid.git
-cd Ultroid
+git clone https://github.com/overspend1/Ultroid-fork.git
+cd Ultroid-fork
 bash ultroid_setup.sh
 ```
-This script will guide you through choosing either a Docker-based or a local Python installation and help configure the necessary variables.
+This script will guide you through choosing either a Docker-based or a local Python installation for this fork and help configure the necessary variables.
 
 For other deployment options or more details, see below.
 
@@ -63,8 +63,8 @@ Get the [Necessary Variables](#Necessary-Variables) and then click the button be
 If you prefer a manual setup or want to understand the components:
 
 *   **Docker**: Refer to [DOCKER_DEPLOYMENT.md](./DOCKER_DEPLOYMENT.md) and [README_DOCKER.md](./README_DOCKER.md). The `ultroid_setup.sh` script automates this using these Docker files.
-*   **Local Python**: The `ultroid_setup.sh` script automates the following general steps:
-    1.  Clone the repository: `git clone https://github.com/TeamUltroid/Ultroid.git && cd Ultroid`
+*   **Local Python**: The `ultroid_setup.sh` script automates the following general steps using this fork's code:
+    1.  Clone this repository: `git clone https://github.com/overspend1/Ultroid-fork.git && cd Ultroid-fork`
     2.  Create a Python virtual environment: `python3 -m venv .venv`
     3.  Activate it: `source .venv/bin/activate`
     4.  Install dependencies: `pip install -r requirements.txt`

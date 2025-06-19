@@ -268,7 +268,8 @@ _collect_env_variables() {
 # --- Main Script Logic ---
 main() {
     _print_msg header "Welcome to the Ultroid UserBot Setup Script!"
-    echo "This script will guide you through setting up Ultroid either using Docker or a local Python environment."
+    _print_msg info "This script will guide you through setting up your fork of Ultroid (github.com/overspend1/Ultroid-fork)."
+    echo "You can choose to set it up using Docker or a local Python environment."
     echo "-----------------------------------------------------"
 
     # Ensure script is run from project root or can find its files
