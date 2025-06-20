@@ -32,10 +32,11 @@ class UltroidClient(TelegramClient):
         api_hash=None,
         bot_token=None,
         udB=None,
+        # *args moved before keyword-only arguments for correct signature
+        *args,
         logger: Logger = LOGS,
         log_attempt=True,
         exit_on_error=True,
-        *args,
         **kwargs,
     ):
         self._cache = {}
@@ -47,7 +48,8 @@ class UltroidClient(TelegramClient):
         kwargs["api_id"] = api_id or Var.API_ID
         kwargs["api_hash"] = api_hash or Var.API_HASH
         kwargs["base_logger"] = TelethonLogger
-        super().__init__(session, **kwargs)
+        # Pass *args to super if it might be used by the parent class
+        super().__init__(session, *args, **kwargs)
         self.run_in_loop(self.start_client(bot_token=bot_token))
         self.dc_id = self.session.dc_id
 
@@ -67,13 +69,13 @@ class UltroidClient(TelegramClient):
             await self.start(**kwargs)
         except ApiIdInvalidError:
             self.logger.critical("API ID and API_HASH combination does not match!")
-
+            # Consider raising the error instead of sys.exit for better testability/embedding
             sys.exit()
-        except (AuthKeyDuplicatedError, EOFError) as er:
+        except (AuthKeyDuplicatedError, EOFError): # 'er' variable was unused
             if self._handle_error:
                 self.logger.critical("String session expired. Create new!")
-                return sys.exit()
-            self.logger.critical("String session expired.")
+                sys.exit() # return sys.exit() is not valid, just sys.exit()
+            self.logger.critical("String session expired.") # This path might not be reachable if _handle_error is always True for sys.exit cases
         except (AccessTokenExpiredError, AccessTokenInvalidError):
             # AccessTokenError can only occur for Bot account
             # And at Early Process, Its saved in DB.
@@ -87,10 +89,10 @@ class UltroidClient(TelegramClient):
         if self.me.bot:
             me = f"@{self.me.username}"
         else:
-            setattr(self.me, "phone", None)
+            setattr(self.me, "phone", None) # Ensure 'phone' attribute exists if accessed later
             me = self.full_name
         if self._log_at:
-            self.logger.info(f"Logged in as {me}")
+            self.logger.info("Logged in as %s", me)
         self._bot = await self.is_bot()
 
     async def fast_uploader(self, file, **kwargs):
@@ -104,8 +106,9 @@ class UltroidClient(TelegramClient):
         filename = kwargs.get("filename", path.name)
         # Set to True and pass event to show progress bar.
         show_progress = kwargs.get("show_progress", False)
+        event = None # Initialize event to None
         if show_progress:
-            event = kwargs["event"]
+            event = kwargs["event"] # pylint: disable=possibly-used-before-assignment (logic handles this)
         # Whether to use cached file for uploading or not
         use_cache = kwargs.get("use_cache", True)
         # Delete original file after uploading
@@ -168,8 +171,9 @@ class UltroidClient(TelegramClient):
         # Set to True and pass event to show progress bar.
         show_progress = kwargs.get("show_progress", False)
         filename = kwargs.get("filename", "")
+        event = None # Initialize event to None
         if show_progress:
-            event = kwargs["event"]
+            event = kwargs["event"] # pylint: disable=possibly-used-before-assignment (logic handles this)
         # Don't show progress bar when file size is less than 10MB.
         if file.size < 10 * 2**20:
             show_progress = False

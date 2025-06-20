@@ -1,19 +1,21 @@
-# 🐳 Ultroid Docker Deployment
+# 🐳 Ultroid Docker Deployment (Fork: overspend1/Ultroid-fork)
 
-Complete Docker-based deployment solution for [Ultroid Telegram UserBot](https://github.com/TeamUltroid/Ultroid) with all dependencies, databases, and services included.
+Complete Docker-based deployment solution for this fork of [Ultroid Telegram UserBot](https://github.com/overspend1/Ultroid-fork) with all dependencies, databases, and services included. This guide helps you build and run a Docker image directly from this repository's source code.
 
-## ⚡ Quick Start
+## ⚡ Quick Start (Recommended)
 
+The easiest way to set up Ultroid Docker for this fork is by using the unified setup script:
 ```bash
-# 1. Clone repository
-git clone https://github.com/TeamUltroid/Ultroid.git
-cd Ultroid
+# 1. Clone this repository
+git clone https://github.com/overspend1/Ultroid-fork.git
+cd Ultroid-fork
 
-# 2. One-command deployment
-chmod +x quick-start.sh && ./quick-start.sh
+# 2. Run the setup script
+bash ultroid_setup.sh
 ```
+Follow the prompts, and choose the Docker setup option. The script will handle `.env` configuration, session generation guidance, and Docker build/run steps.
 
-That's it! The script will guide you through session generation and deployment.
+For manual Docker commands and more details, see below.
 
 ## 🎯 What's Included
 
@@ -34,35 +36,38 @@ That's it! The script will guide you through session generation and deployment.
 - **Deployment Summary** - `DEPLOYMENT_SUMMARY.md`
 - **Environment Template** - `.env.sample`
 
-## 🚀 Deployment Methods
+## 🚀 Manual Docker Deployment Methods
 
-### Method 1: Quick Start (Recommended)
+If you prefer not to use `ultroid_setup.sh` or want more control:
+
+### Method 1: Using Docker Compose (Recommended for Manual Setup)
+Ensure you have an `.env` file configured (see [Configuration](#⚙️-configuration) and [Necessary Variables from Main README](../README.md#important-necessary-variables)).
 ```bash
-./quick-start.sh
-```
+# 1. Clone this repository (if not already done)
+# git clone https://github.com/overspend1/Ultroid-fork.git
+# cd Ultroid-fork
 
-### Method 2: Step by Step
-```bash
-# Generate session
-./generate-session.sh
+# 2. Configure .env file with your variables
+# cp .env.sample .env
+# nano .env # Fill in API_ID, API_HASH, SESSION, etc.
 
-# Configure environment
-cp .env.sample .env
-nano .env
-
-# Deploy
-./docker-deploy.sh
-```
-
-### Method 3: Manual Commands
-```bash
-# Build and start
-make build
-make start
-
-# Or using docker-compose directly
+# 3. Build and start containers
+docker-compose build
 docker-compose up -d
 ```
+
+### Method 2: Using Makefile (Shortcuts for Docker Compose)
+The `Makefile` provides convenient shortcuts for Docker Compose commands.
+```bash
+# Configure .env file first
+
+make build  # Build the Docker image
+make start  # Start services (equivalent to docker-compose up -d)
+# make logs, make stop, etc. are also available. See Makefile.
+```
+
+### Older Scripts (Deprecated)
+The `quick-start.sh` and `docker-deploy.sh` scripts are now superseded by `ultroid_setup.sh`. While they might still work, using `ultroid_setup.sh` or manual `docker-compose` commands is recommended.
 
 ## 📋 Prerequisites
 
@@ -126,6 +131,7 @@ BOT_TOKEN=          # Assistant bot
 LOG_CHANNEL=        # Logging channel
 OWNER_ID=           # Your user ID
 HEROKU_API_KEY=     # For updates
+TZ=Asia/Kolkata     # Set your desired timezone (e.g., Europe/London, America/New_York)
 ```
 
 ## 🎮 Management Commands
@@ -150,7 +156,7 @@ docker-compose up -d                    # Start
 docker-compose down                     # Stop
 docker-compose logs -f ultroid          # Logs
 docker-compose restart ultroid          # Restart
-docker-compose exec ultroid bash        # Shell
+docker-compose exec ultroid bash        # Shell (Note: Container runs as 'ultroid' user, WORKDIR is /home/ultroid/app)
 ```
 
 ## 🔍 Monitoring & Troubleshooting
@@ -243,10 +249,11 @@ docker-compose restart redis
 
 ### Volume Mounts
 ```
-./downloads     → Bot downloads
-./uploads       → Bot uploads  
-./logs          → Application logs
-./resources     → Bot resources
+./downloads     → /home/ultroid/app/downloads
+./uploads       → /home/ultroid/app/uploads
+./logs          → /home/ultroid/app/logs
+./resources     → /home/ultroid/app/resources
+# .env and credentials.json are also mounted into /home/ultroid/app/
 ```
 
 ## 🆚 Comparison with Other Methods
@@ -262,25 +269,26 @@ docker-compose restart redis
 
 ## 📞 Support & Resources
 
-- **Repository**: [TeamUltroid/Ultroid](https://github.com/TeamUltroid/Ultroid)
-- **Telegram**: [@UltroidSupport](https://t.me/UltroidSupport)
+- **This Fork's Repository**: [overspend1/Ultroid-fork](https://github.com/overspend1/Ultroid-fork)
+- **Original Ultroid Support (Telegram)**: [@UltroidSupport](https://t.me/UltroidSupport) (for general Ultroid questions)
 - **Session Bot**: [@SessionGeneratorBot](https://t.me/SessionGeneratorBot)
-- **Documentation**: [Official Docs](https://ultroid.tech)
+- **Original Ultroid Documentation**: [Official Docs](https://ultroid.tech) (may differ from this fork)
 
 ## 📄 Files Overview
 
+This repository contains:
 ```
-📁 Ultroid/
-├── 🐳 docker-compose.yml       # Service orchestration
-├── 🐳 Dockerfile               # Container definition
-├── 🚀 quick-start.sh           # One-command deployment
-├── 🚀 docker-deploy.sh         # Advanced deployment
-├── 🔑 generate-session.sh      # Session generator
-├── ⚙️ .env.sample              # Environment template
-├── 📖 DOCKER_DEPLOYMENT.md     # Complete guide
-├── 📋 DEPLOYMENT_SUMMARY.md    # Summary
-├── 🔧 Makefile                 # Easy commands
-└── 📚 README_DOCKER.md         # This file
+📁 Ultroid-fork/
+├── 🚀 ultroid_setup.sh         # Recommended unified setup script
+├── 🐳 Dockerfile               # Defines how your fork's Docker image is built
+├── 🐳 docker-compose.yml       # Orchestrates Docker services (bot, db)
+├── 🔑 generate-session.sh      # Standalone session string generator utility
+├── ⚙️ .env.sample              # Template for environment variables
+├── 📖 README.md                # Main README for this fork
+├── 📖 README_DOCKER.md         # This file - Docker specific guide for the fork
+├── 📖 DOCKER_DEPLOYMENT.md     # Detailed Docker deployment steps
+├── 🔧 Makefile                 # Shortcuts for common commands
+└── ... (rest of the bot code and resources)
 ```
 
 ## 🎉 Success Indicators
@@ -295,6 +303,6 @@ Your deployment is successful when:
 
 ---
 
-**🚀 Ready to deploy Ultroid with Docker!**
+**🚀 Ready to deploy your Ultroid fork with Docker!**
 
-Start with `./quick-start.sh` for the easiest experience.
+Use `bash ultroid_setup.sh` for the guided experience.

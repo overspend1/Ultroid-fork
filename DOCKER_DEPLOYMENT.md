@@ -1,6 +1,6 @@
-# 🐳 Ultroid Docker Deployment Guide
+# 🐳 Ultroid Docker Deployment Guide (Fork: overspend1/Ultroid-fork)
 
-Complete Docker-based deployment guide for Ultroid Telegram UserBot following the official deployment patterns.
+Complete Docker-based deployment guide for this fork of Ultroid Telegram UserBot. This guide assumes you are building the Docker image from the source code of this repository.
 
 ## 📋 Prerequisites
 
@@ -9,53 +9,57 @@ Complete Docker-based deployment guide for Ultroid Telegram UserBot following th
 - Session string
 - Basic knowledge of environment variables
 
-## 🚀 Quick Start
+## 🚀 Recommended Setup: Using `ultroid_setup.sh`
 
-### 1. Clone Repository
+The easiest and recommended way to deploy this fork using Docker is with the unified setup script:
+
+1.  **Clone this repository:**
+    ```bash
+    git clone https://github.com/overspend1/Ultroid-fork.git
+    cd Ultroid-fork
+    ```
+2.  **Run the setup script:**
+    ```bash
+    bash ultroid_setup.sh
+    ```
+    Select the Docker setup option when prompted. The script will guide you through:
+    *   Checking dependencies (Docker, Docker Compose).
+    *   Configuring your `.env` file with necessary variables (API keys, session string, database choice, etc.).
+    *   Guiding session string generation if needed.
+    *   Building the Docker image from this fork's source.
+    *   Starting the Docker containers.
+
+## Manually Deploying with Docker Compose (Advanced)
+
+If you prefer a manual approach:
+
+### 1. Clone This Repository
 ```bash
-git clone https://github.com/TeamUltroid/Ultroid.git
-cd Ultroid
+git clone https://github.com/overspend1/Ultroid-fork.git
+cd Ultroid-fork
 ```
 
-### 2. Generate Session String
-```bash
-chmod +x generate-session.sh
-./generate-session.sh
-```
-
-Choose from multiple methods:
-- **Docker** (Recommended)
-- **Telegram Bot** (@SessionGeneratorBot) 
-- **Local Python**
-- **Online Repl.it**
-
-### 3. Configure Environment
+### 2. Configure Environment (`.env` file)
+Copy the sample environment file and edit it with your details:
 ```bash
 cp .env.sample .env
-nano .env
+nano .env # Or your preferred editor
 ```
-
-**Required variables:**
+**Essential variables to fill:**
 ```env
-SESSION=your_session_string
-API_ID=your_api_id
-API_HASH=your_api_hash
-REDIS_URI=redis://redis:6379
-REDIS_PASSWORD=ultroid123
+SESSION=your_session_string_here # See README.md for generation methods
+API_ID=your_api_id               # From my.telegram.org/apps
+API_HASH=your_api_hash           # From my.telegram.org/apps
+# Plus database configuration (see below or .env.sample)
 ```
+Refer to [Necessary Variables in the main README](../README.md#important-necessary-variables) for more details on each variable. Session string can be generated using `bash generate-session.sh` or other methods.
 
-### 4. Deploy with Docker
+### 3. Build and Deploy with Docker Compose
 ```bash
-chmod +x docker-deploy.sh
-./docker-deploy.sh
+docker-compose build   # Builds the Docker image from this fork's Dockerfile
+docker-compose up -d   # Starts the services (bot, database) in detached mode
 ```
-
-The script will:
-- ✅ Check dependencies
-- ✅ Setup environment
-- ✅ Configure database
-- ✅ Build Docker images
-- ✅ Start all services
+This uses the `Dockerfile` and `docker-compose.yml` present in this repository.
 
 ## 🏗️ Architecture
 
@@ -78,12 +82,14 @@ services:
 
 ## 📁 Volume Mounts
 
+The following host directories are mounted into the `ultroid` container. Note that the internal working directory is now `/home/ultroid/app`.
 ```
-./downloads     → /root/TeamUltroid/downloads
-./uploads       → /root/TeamUltroid/uploads  
-./logs          → /root/TeamUltroid/logs
-./resources     → /root/TeamUltroid/resources
-./.env          → /root/TeamUltroid/.env
+./downloads          → /home/ultroid/app/downloads
+./uploads            → /home/ultroid/app/uploads
+./logs               → /home/ultroid/app/logs
+./resources/session  → /home/ultroid/app/resources/session
+./.env               → /home/ultroid/app/.env (mounted read-only)
+./credentials.json   → /home/ultroid/app/credentials.json (if present, mounted read-only)
 ```
 
 ## 🔧 Configuration Options
@@ -126,6 +132,9 @@ HEROKU_APP_NAME=your_app_name
 SPAMWATCH_API=your_spamwatch_api
 OPENWEATHER_API=your_weather_api
 REMOVE_BG_API=your_removebg_api
+
+# Timezone
+TZ=Asia/Kolkata  # Example: Europe/London, America/New_York. Sets the container timezone.
 ```
 
 ## 🎯 Management Commands
@@ -156,7 +165,7 @@ docker-compose up -d
 ### Maintenance
 ```bash
 # Shell access
-docker-compose exec ultroid bash
+docker-compose exec ultroid bash # Note: You will be logged in as the 'ultroid' user in /home/ultroid/app
 
 # Database access (Redis)
 docker-compose exec redis redis-cli
@@ -187,7 +196,7 @@ docker stats
 **2. Database Connection Issues**
 ```bash
 # Check database status
-docker-compose ps
+docker-compose ps # Services should show (healthy) status after startup period
 docker-compose logs redis
 ```
 
@@ -230,10 +239,10 @@ MONGO_PASSWORD=generate_strong_password
 
 ### Container Security
 ```bash
-# Run as non-root (in production)
-# Use Docker secrets for sensitive data
+# Run as non-root (in production) - Implemented: Bot now runs as non-root 'ultroid' user.
+# Use Docker secrets for sensitive data - Consider for advanced setups.
 # Regular security updates
-docker-compose pull && docker-compose up -d
+docker-compose pull && docker-compose up -d # Pulls latest base images and rebuilds Ultroid
 ```
 
 ## 📊 Monitoring & Logs
@@ -303,10 +312,10 @@ docker-compose up -d
 
 ## 📞 Support & Resources
 
-- **Official Repository**: [TeamUltroid/Ultroid](https://github.com/TeamUltroid/Ultroid)
-- **Telegram Support**: [@UltroidSupport](https://t.me/UltroidSupport)
-- **Documentation**: [Official Docs](https://ultroid.tech)
-- **Session Generator Bot**: [@SessionGeneratorBot](https://t.me/SessionGeneratorBot)
+- **This Fork's Repository**: [overspend1/Ultroid-fork](https://github.com/overspend1/Ultroid-fork)
+- **Original Ultroid Support (Telegram)**: [@UltroidSupport](https://t.me/UltroidSupport) (for general Ultroid questions)
+- **Original Ultroid Documentation**: [Official Docs](https://ultroid.tech) (may differ for this fork)
+- **Session Generator Bot**: [@SessionGeneratorBot](https://t.me/SessionGeneratorBot) (for generating session strings)
 
 ## ✨ Features Included
 
@@ -321,12 +330,12 @@ docker-compose up -d
 - ✅ Comprehensive logging
 
 ### Docker Benefits
-- ✅ Isolated environment
+- ✅ Isolated environment (now more secure with non-root user)
 - ✅ Easy deployment
 - ✅ Consistent across platforms
-- ✅ Built-in database services
+- ✅ Built-in database services (with healthchecks)
 - ✅ Volume persistence
-- ✅ Health monitoring
+- ✅ Health monitoring (via Docker healthchecks and `health_check.sh`)
 - ✅ Easy scaling
 
 ---

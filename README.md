@@ -22,11 +22,30 @@
 [![Sparkline](https://stars.medv.io/Teamultroid/Ultroid.svg)](https://stars.medv.io/TeamUltroid/Ultroid)
 ----
 
-# Deploy
-- [Okteto](#deploy-to-okteto)
-- [Local Machine](#deploy-locally)
+# 🚀 Getting Started
 
-# Documentation 
+The easiest way to set up Ultroid is by using our unified setup script.
+
+**Run this command in your terminal:**
+```bash
+bash <(curl -s https://raw.githubusercontent.com/overspend1/Ultroid-fork/main/ultroid_setup.sh)
+```
+Or, clone this repository and run the script:
+```bash
+git clone https://github.com/overspend1/Ultroid-fork.git
+cd Ultroid-fork
+bash ultroid_setup.sh
+```
+This script will guide you through choosing either a Docker-based or a local Python installation for this fork and help configure the necessary variables.
+
+For other deployment options or more details, see below.
+
+# Other Deployment Options
+
+- [Okteto](#deploy-to-okteto)
+- [Manual Setup (Docker or Local)](#manual-setup)
+
+# Documentation
 [![Documentation](https://img.shields.io/badge/Documentation-Ultroid-blue)](http://ultroid.tech/)
 
 # Tutorial 
@@ -40,48 +59,23 @@ Get the [Necessary Variables](#Necessary-Variables) and then click the button be
 
 [![Develop on Okteto](https://okteto.com/develop-okteto.svg)](https://cloud.okteto.com/deploy?repository=https://github.com/TeamUltroid/Ultroid)
 
-## Deploy Locally
-- [Traditional Method](#local-deploy---traditional-method)
-- [Easy Method](#local-deploy---easy-method)
-- [Ultroid CLI](#ultroid-cli)
+## Manual Setup
+If you prefer a manual setup or want to understand the components:
 
-### Local Deploy - Easy Method
-- Linux - `wget -O locals.py https://git.io/JY9UM && python3 locals.py`
-- Windows - `cd desktop ; wget https://git.io/JY9UM -o locals.py ; python locals.py`
-- Termux - `wget -O install-termux https://tiny.ultroid.tech/termux && bash install-termux`
-
-### Local Deploy - Traditional Method
-- Get your [Necessary Variables](#Necessary-Variables)
-- Clone the repository:    
-`git clone https://github.com/TeamUltroid/Ultroid.git`
-- Go to the cloned folder:    
-`cd Ultroid`
-- Create a virtual env:      
-`virtualenv -p /usr/bin/python3 venv`
-`. ./venv/bin/activate`
-- Install the requirements:      
-`pip(3) install -U -r re*/st*/optional-requirements.txt`
-`pip(3) install -U -r requirements.txt`
-- Generate your `SESSION`:
-  - For Linux users:
-    `bash sessiongen`
-     or
-    `wget -O session.py https://git.io/JY9JI && python3 session.py`
-  - For Termux users:
-    `wget -O session.py https://git.io/JY9JI && python session.py`
-  - For Windows Users:
-    `cd desktop ; wget https://git.io/JY9JI -o ultroid.py ; python ultroid.py`
-- Fill your details in a `.env` file, as given in [`.env.sample`](https://github.com/TeamUltroid/Ultroid/blob/main/.env.sample).
-(You can either edit and rename the file or make a new file named `.env`.)
-- Run the bot:
-  - Linux Users:
-   `bash startup`
-  - Windows Users:
-    `python(3) -m pyUltroid`
+*   **Docker**: Refer to [DOCKER_DEPLOYMENT.md](./DOCKER_DEPLOYMENT.md) and [README_DOCKER.md](./README_DOCKER.md). The `ultroid_setup.sh` script automates this using these Docker files.
+*   **Local Python**: The `ultroid_setup.sh` script automates the following general steps using this fork's code:
+    1.  Clone this repository: `git clone https://github.com/overspend1/Ultroid-fork.git && cd Ultroid-fork`
+    2.  Create a Python virtual environment: `python3 -m venv .venv`
+    3.  Activate it: `source .venv/bin/activate`
+    4.  Install dependencies: `pip install -r requirements.txt`
+    5.  Configure your variables in a `.env` file (see [Necessary Variables](#Necessary-Variables) below).
+    6.  Run the bot: `python3 -m pyUltroid`
 
 ---
-## Necessary Variables
-- `SESSION` - SessionString for your accounts login session. Get it from [here](#Session-String)
+## Important: Necessary Variables
+Whether using the setup script or a manual method, you will need the following:
+
+- **`SESSION`**: Your Telegram user account session string. The setup script and other utilities can help you generate this. See [Session String](#Session-String) for methods.
 
 One of the following database:
 - For **Redis** (tutorial [here](./resources/extras/redistut.md))
@@ -96,9 +90,11 @@ One of the following database:
 Different ways to get your `SESSION`:
 * [![Run on Repl.it](https://replit.com/badge/github/TeamUltroid/Ultroid)](https://replit.com/@TeamUltroid/UltroidStringSession)
 * Linux : `wget -O session.py https://git.io/JY9JI && python3 session.py`
-* PowerShell : `cd desktop ; wget https://git.io/JY9JI ; python ultroid.py`
+* PowerShell : `cd desktop ; wget https://git.io/JY9JI -OutFile session.py ; python session.py`
 * Termux : `wget -O session.py https://git.io/JY9JI && python session.py`
-* TelegramBot : [@SessionGeneratorBot](https://t.me/SessionGeneratorBot)
+* Telegram Bot : [@SessionGeneratorBot](https://t.me/SessionGeneratorBot)
+* **Using `ultroid_setup.sh`**: The setup script will guide you through session generation if needed.
+* **Using `generate-session.sh`**: This script in the repository provides various methods: `bash generate-session.sh`
 
 ---
 

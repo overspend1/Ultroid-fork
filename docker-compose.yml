@@ -13,6 +13,11 @@ services:
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD:-ultroid123}
     command: redis-server --requirepass ${REDIS_PASSWORD:-ultroid123}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-ultroid123}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - ultroid-network
 
@@ -28,60 +33,89 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER:-ultroid}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-ultroid123}
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh -u ${MONGO_USER:-ultroid} -p ${MONGO_PASSWORD:-ultroid123} --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
     networks:
       - ultroid-network
 
   # Ultroid Bot Service
   ultroid:
-    build: .
+    build:
+      context: .
+      args:
+        - TZ_ARG=${TZ:-Asia/Kolkata} # Allow overriding timezone during build
     container_name: ultroid-bot
     restart: unless-stopped
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy # Wait for redis to be healthy
+      # Uncomment if using mongodb
+      # mongodb:
+      #   condition: service_healthy
     volumes:
-      - ./downloads:/root/TeamUltroid/downloads
-      - ./uploads:/root/TeamUltroid/uploads
-      - ./logs:/root/TeamUltroid/logs
-      - ./resources/session:/root/TeamUltroid/resources/session
-      - ./.env:/root/TeamUltroid/.env
-      - ./credentials.json:/root/TeamUltroid/credentials.json:ro
+      # Note: Paths inside container are now relative to /home/ultroid/app
+      - ./downloads:/home/ultroid/app/downloads
+      - ./uploads:/home/ultroid/app/uploads
+      - ./logs:/home/ultroid/app/logs
+      - ./resources/session:/home/ultroid/app/resources/session
+      - ./.env:/home/ultroid/app/.env:ro # Mount .env as read-only
+      - ./credentials.json:/home/ultroid/app/credentials.json:ro # Mount credentials as read-only
     environment:
       # Database Configuration (Redis)
-      - REDIS_URI=redis://redis:6379
+      - REDIS_URI=redis://redis:6379 # Service name from docker-compose
       - REDIS_PASSWORD=${REDIS_PASSWORD:-ultroid123}
       
       # Alternative MongoDB Configuration
       # - MONGO_URI=mongodb://${MONGO_USER:-ultroid}:${MONGO_PASSWORD:-ultroid123}@mongodb:27017/ultroid?authSource=admin
       
-      # Bot Configuration
+      # Bot Configuration (ensure these are in your .env file)
       - SESSION=${SESSION}
       - API_ID=${API_ID}
       - API_HASH=${API_HASH}
-      - BOT_TOKEN=${BOT_TOKEN}
-      - OWNER_ID=${OWNER_ID}
+      - BOT_TOKEN=${BOT_TOKEN} # Optional, for assistant bot
+      - OWNER_ID=${OWNER_ID}   # Optional, your Telegram user ID
       
-      # Optional Configuration
+      # Optional Configuration (ensure these are in your .env file if used)
       - HEROKU_API_KEY=${HEROKU_API_KEY}
       - HEROKU_APP_NAME=${HEROKU_APP_NAME}
       - LOG_CHANNEL=${LOG_CHANNEL}
       - BOT_MODE=${BOT_MODE}
       - DUAL_MODE=${DUAL_MODE}
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=${DATABASE_URL} # For external DBs like PostgreSQL
       - OKTETO_TOKEN=${OKTETO_TOKEN}
       
-      # Custom Configuration
-      - TZ=Asia/Kolkata
+      # Timezone for the container environment
+      - TZ=${TZ:-Asia/Kolkata}
+    healthcheck:
+      test: ["CMD-SHELL", "bash health_check.sh"] # Assumes health_check.sh is executable and in WORKDIR
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s # Give the bot some time to start up
     networks:
       - ultroid-network
 
   # Session Generator Service (One-time use)
+  # Note: This service will also run as non-root user defined in Dockerfile's final stage.
+  # If it needs to write to /root/TeamUltroid/session_output, permissions might be an issue.
+  # For simplicity, it will use the same image. If it fails, it might need its own simple Dockerfile or adjustments.
   session-gen:
-    build: .
+    build:
+      context: .
+      args:
+        - TZ_ARG=${TZ:-Asia/Kolkata}
     container_name: ultroid-session-gen
     profiles: ["session"]
     volumes:
-      - ./session_output:/root/TeamUltroid/session_output
-    command: bash -c "wget -O session.py https://git.io/JY9JI && python3 session.py"
+      # This path needs to be writable by the 'ultroid' user (UID 10001 by default)
+      # or the command needs to be adjusted to write to a user-writable path.
+      - ./session_output:/home/ultroid/app/session_output
+    # The original command tried to write to /root/TeamUltroid.
+    # Changed to use /home/ultroid/app (WORKDIR) which should be writable by the 'ultroid' user.
+    command: bash -c "wget -O session.py https://git.io/JY9JI && python3 session.py && cp *.session session_output/"
     networks:
       - ultroid-network
 

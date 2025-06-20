@@ -88,7 +88,7 @@ def vc_connection(udB, ultroid_bot):
         except (AuthKeyDuplicatedError, EOFError):
             LOGS.info(get_string("py_c3"))
             udB.del_key("VC_SESSION")
-        except Exception as er:
-            LOGS.info("While creating Client for VC.")
-            LOGS.exception(er)
+        except Exception as er: # Catching general Exception as client creation can have various issues
+            LOGS.error("Error while creating VcClient: %s", er, exc_info=True)
+            # Optionally, inform the user that VCBot might not work.
     return ultroid_bot

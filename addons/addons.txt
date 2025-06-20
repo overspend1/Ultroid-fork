@@ -12,7 +12,7 @@ pygments
 pyjokes
 quotefancy
 shazamio
-speechrecognition
+SpeechRecognition # Corrected case
 speedtest-cli
 textblob
 wikipedia
