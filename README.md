@@ -38,12 +38,14 @@ bash ultroid_setup.sh
 ```
 This script will guide you through choosing either a Docker-based or a local Python installation for this fork and help configure the necessary variables.
 
-For other deployment options or more details, see below.
+For more detailed deployment options, including manual Docker setup, see below.
 
-# Other Deployment Options
+# Deployment Options
 
-- [Okteto](#deploy-to-okteto)
-- [Manual Setup (Docker or Local)](#manual-setup)
+- **Automated Setup (Recommended)**: Use the `ultroid_setup.sh` script as described above.
+- **Docker (Manual)**: For a manual Docker setup, see the [Manual Docker Setup](#manual-docker-setup) section below or the comprehensive [README_DOCKER.md](./README_DOCKER.md) for advanced details.
+- **Local Python (Manual)**: See [Manual Local Python Setup](#manual-local-python-setup).
+- **Okteto**: See [Deploy to Okteto](#deploy-to-okteto).
 
 # Documentation
 [![Documentation](https://img.shields.io/badge/Documentation-Ultroid-blue)](http://ultroid.tech/)
@@ -59,17 +61,39 @@ Get the [Necessary Variables](#Necessary-Variables) and then click the button be
 
 [![Develop on Okteto](https://okteto.com/develop-okteto.svg)](https://cloud.okteto.com/deploy?repository=https://github.com/TeamUltroid/Ultroid)
 
-## Manual Setup
-If you prefer a manual setup or want to understand the components:
+## Manual Docker Setup
+If you prefer a manual Docker setup:
 
-*   **Docker**: Refer to [DOCKER_DEPLOYMENT.md](./DOCKER_DEPLOYMENT.md) and [README_DOCKER.md](./README_DOCKER.md). The `ultroid_setup.sh` script automates this using these Docker files.
-*   **Local Python**: The `ultroid_setup.sh` script automates the following general steps using this fork's code:
-    1.  Clone this repository: `git clone https://github.com/overspend1/Ultroid-fork.git && cd Ultroid-fork`
-    2.  Create a Python virtual environment: `python3 -m venv .venv`
-    3.  Activate it: `source .venv/bin/activate`
-    4.  Install dependencies: `pip install -r requirements.txt`
-    5.  Configure your variables in a `.env` file (see [Necessary Variables](#Necessary-Variables) below).
-    6.  Run the bot: `python3 -m pyUltroid`
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/overspend1/Ultroid-fork.git
+    cd Ultroid-fork
+    ```
+2.  **Configure `.env` file**:
+    Copy the sample and fill in your details (API_ID, API_HASH, SESSION, etc.).
+    ```bash
+    cp .env.sample .env
+    nano .env 
+    ```
+    Refer to the [Necessary Variables](#Necessary-Variables) section and [README_DOCKER.md](./README_DOCKER.md#️-configuration) for details on all variables.
+3.  **Build and Run with Docker Compose**:
+    ```bash
+    docker-compose build
+    docker-compose up -d
+    ```
+    This will build the Docker images and start the Ultroid bot and any configured database services (like Redis) in detached mode.
+
+For more advanced Docker configurations, troubleshooting, and management commands (like using the `Makefile`), please refer to the detailed **[README_DOCKER.md](./README_DOCKER.md)**.
+
+## Manual Local Python Setup
+The `ultroid_setup.sh` script automates these steps, but if you prefer manual local Python setup:
+
+1.  Clone this repository: `git clone https://github.com/overspend1/Ultroid-fork.git && cd Ultroid-fork`
+2.  Create a Python virtual environment: `python3 -m venv .venv`
+3.  Activate it: `source .venv/bin/activate` (for Linux/macOS) or `.\.venv\Scripts\activate` (for Windows)
+4.  Install dependencies: `pip install -r requirements.txt`
+5.  Configure your variables in a `.env` file (see [Necessary Variables](#Necessary-Variables) below).
+6.  Run the bot: `python3 -m pyUltroid`
 
 ---
 ## Important: Necessary Variables

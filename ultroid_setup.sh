@@ -76,15 +76,18 @@ _check_python_version() {
 _prompt_user() {
     local prompt_message="$1"
     local var_name="$2"
-    local default_value="${3:-}" # Use bash specific default value assignment
-    local current_value="${!var_name:-$default_value}" # Get current value of var_name or default
+    local default_value="${3:-}"
     local input
 
+    # Echo the prompt using color codes
     if [ -n "$default_value" ]; then
-        read -p "$(echo -e "${YELLOW}$prompt_message${NC} [Default: $default_value]: ")" input
+        echo -e -n "${YELLOW}${prompt_message}${NC} [Default: $default_value]: "
     else
-        read -p "$(echo -e "${YELLOW}$prompt_message${NC}: ")" input
+        echo -e -n "${YELLOW}${prompt_message}${NC}: "
     fi
+
+    # Read the input
+    read input
 
     if [ -z "$input" ] && [ -n "$default_value" ]; then
         eval "$var_name=\"$default_value\""
@@ -98,8 +101,13 @@ _prompt_user_sensitive() {
     local var_name="$2"
     local input
 
-    read -sp "$(echo -e "${YELLOW}$prompt_message${NC}: ")" input
+    # Echo the prompt using color codes
+    echo -e -n "${YELLOW}${prompt_message}${NC}: "
+
+    # Read the input silently
+    read -s input </dev/tty
     echo # Newline after sensitive input
+
     eval "$var_name=\"$input\""
 }
 
