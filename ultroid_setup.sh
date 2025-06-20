@@ -76,14 +76,36 @@ _check_python_version() {
 _prompt_user() {
     local prompt_message="$1"
     local var_name="$2"
-    local default_value="${3:-}" # Use bash specific default value assignment
-    local current_value="${!var_name:-$default_value}" # Get current value of var_name or default
+    local default_value="${3:-}"
+    local current_value="${!var_name:-$default_value}" # Not used currently, but good for reference
     local input
 
+    local read_target_set_internally=false
+    # Check if stdin (fd 0) is a terminal
+    if ! [ -t 0 ]; then
+        # If stdin is not a terminal, check if /dev/tty is available
+        if [ -c /dev/tty ]; then
+            read_target_set_internally=true
+        else
+            _print_msg error "Cannot read user input: No TTY available. stdin is not a terminal and /dev/tty is not accessible."
+            # Exiting because user input is critical for this script.
+            # Alternatively, could return an error code: return 1
+            exit 1
+        fi
+    fi
+
     if [ -n "$default_value" ]; then
-        read -p "$(echo -e "${YELLOW}$prompt_message${NC} [Default: $default_value]: ")" input
+        if $read_target_set_internally; then
+            read -p "$(echo -e "${YELLOW}$prompt_message${NC} [Default: $default_value]: ")" input < /dev/tty
+        else
+            read -p "$(echo -e "${YELLOW}$prompt_message${NC} [Default: $default_value]: ")" input
+        fi
     else
-        read -p "$(echo -e "${YELLOW}$prompt_message${NC}: ")" input
+        if $read_target_set_internally; then
+            read -p "$(echo -e "${YELLOW}$prompt_message${NC}: ")" input < /dev/tty
+        else
+            read -p "$(echo -e "${YELLOW}$prompt_message${NC}: ")" input
+        fi
     fi
 
     if [ -z "$input" ] && [ -n "$default_value" ]; then
@@ -98,7 +120,25 @@ _prompt_user_sensitive() {
     local var_name="$2"
     local input
 
-    read -sp "$(echo -e "${YELLOW}$prompt_message${NC}: ")" input
+    local read_target_set_internally=false
+    # Check if stdin (fd 0) is a terminal
+    if ! [ -t 0 ]; then
+        # If stdin is not a terminal, check if /dev/tty is available
+        if [ -c /dev/tty ]; then
+            read_target_set_internally=true
+        else
+            _print_msg error "Cannot read sensitive user input: No TTY available. stdin is not a terminal and /dev/tty is not accessible."
+            # Exiting because user input is critical for this script.
+            # Alternatively, could return an error code: return 1
+            exit 1
+        fi
+    fi
+
+    if $read_target_set_internally; then
+        read -sp "$(echo -e "${YELLOW}$prompt_message${NC}: ")" input < /dev/tty
+    else
+        read -sp "$(echo -e "${YELLOW}$prompt_message${NC}: ")" input
+    fi
     echo # Newline after sensitive input
     eval "$var_name=\"$input\""
 }
