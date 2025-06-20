@@ -105,7 +105,7 @@ _prompt_user_sensitive() {
     echo -e -n "${YELLOW}${prompt_message}${NC}: "
 
     # Read the input silently
-    read -s input </dev/tty
+    read -s input
     echo # Newline after sensitive input
 
     eval "$var_name=\"$input\""

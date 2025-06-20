@@ -62,28 +62,68 @@ Get the [Necessary Variables](#Necessary-Variables) and then click the button be
 [![Develop on Okteto](https://okteto.com/develop-okteto.svg)](https://cloud.okteto.com/deploy?repository=https://github.com/TeamUltroid/Ultroid)
 
 ## Manual Docker Setup
-If you prefer a manual Docker setup:
+If you prefer a manual Docker setup instead of using the `ultroid_setup.sh` script:
 
-1.  **Clone the repository**:
-    ```bash
-    git clone https://github.com/overspend1/Ultroid-fork.git
-    cd Ultroid-fork
-    ```
-2.  **Configure `.env` file**:
-    Copy the sample and fill in your details (API_ID, API_HASH, SESSION, etc.).
-    ```bash
-    cp .env.sample .env
-    nano .env 
-    ```
-    Refer to the [Necessary Variables](#Necessary-Variables) section and [README_DOCKER.md](./README_DOCKER.md#️-configuration) for details on all variables.
-3.  **Build and Run with Docker Compose**:
-    ```bash
-    docker-compose build
-    docker-compose up -d
-    ```
-    This will build the Docker images and start the Ultroid bot and any configured database services (like Redis) in detached mode.
+**1. Prerequisites:**
+   - Docker and Docker Compose installed on your system.
+   - Telegram API credentials (API_ID and API_HASH) from [my.telegram.org/apps](https://my.telegram.org/apps).
+   - A Telegram `SESSION` string (see [Session String](#Session-String) section for generation methods).
 
-For more advanced Docker configurations, troubleshooting, and management commands (like using the `Makefile`), please refer to the detailed **[README_DOCKER.md](./README_DOCKER.md)**.
+**2. Clone the Repository:**
+   ```bash
+   git clone https://github.com/overspend1/Ultroid-fork.git
+   cd Ultroid-fork
+   ```
+
+**3. Configure `.env` File:**
+   Copy the sample environment file and fill in your details.
+   ```bash
+   cp .env.sample .env
+   nano .env # Or use your preferred text editor
+   ```
+   **Key variables to configure in `.env`:**
+   ```env
+   # Mandatory
+   SESSION=your_session_string_here
+   API_ID=your_api_id
+   API_HASH=your_api_hash
+
+   # Database (choose one, Redis is recommended for Docker)
+   # Option 1: Redis (Default)
+   REDIS_URI=redis://redis:6379 # Default for docker-compose setup
+   REDIS_PASSWORD=ultroid123    # Default for docker-compose setup
+
+   # Option 2: MongoDB (Uncomment and configure if using Mongo)
+   # MONGO_URI=mongodb://ultroid:ultroid123@mongodb:27017/ultroid?authSource=admin
+
+   # Option 3: External SQL Database (Uncomment and configure if using external SQL)
+   # DATABASE_URL=postgresql://user:pass@host:port/db
+
+   # Optional, but recommended
+   BOT_TOKEN=your_assistant_bot_token # Optional, from @BotFather
+   LOG_CHANNEL=your_log_channel_id    # Numeric ID, e.g., -100xxxxxxxx
+   OWNER_ID=your_telegram_user_id     # Your numeric Telegram User ID
+   TZ=Asia/Kolkata                    # Your timezone, e.g., Europe/London
+   ```
+   For a complete list of variables and their descriptions, refer to the `.env.sample` file and the [Necessary Variables](#Necessary-Variables) section.
+
+**4. Build and Run with Docker Compose:**
+   This is the recommended way to run Ultroid with Docker manually.
+   ```bash
+   docker-compose build
+   docker-compose up -d
+   ```
+   This command will:
+   - Build the Docker images for Ultroid and any associated services (like Redis or MongoDB if enabled in `docker-compose.yml`).
+   - Start all services in detached mode (running in the background).
+
+**5. Basic Management Commands:**
+   - **View logs**: `docker-compose logs -f ultroid`
+   - **Stop services**: `docker-compose down`
+   - **Restart Ultroid service**: `docker-compose restart ultroid`
+   - **Update (after `git pull`):** `docker-compose build && docker-compose up -d`
+
+For a comprehensive guide to Docker deployment, including advanced configurations, troubleshooting, Makefile shortcuts, backup/restore, and more, please refer to the detailed **[README_DOCKER.md](./README_DOCKER.md)**.
 
 ## Manual Local Python Setup
 The `ultroid_setup.sh` script automates these steps, but if you prefer manual local Python setup:
